@@ -1,4 +1,4 @@
-﻿using GodotXR.Application.Mapper;
+using GodotXR.Application.Mapper;
 using GodotXR.Application.Services;
 using GodotXR.Domain.IRepositories;
 using GodotXR.Domain.IUnitOfWork;
@@ -84,10 +84,7 @@ namespace GodotXR.Infrastructure
             services.Configure<EmailOptions>(
                 configuration.GetSection("Email"));
 
-            services.AddHttpClient<IMailService, BrevoEmailService>(client =>
-            {
-                client.BaseAddress = new Uri("https://api.brevo.com/");
-            });
+            services.AddScoped<IMailService, SmtpEmailService>();
 
             // JWT
             var jwtSettings = configuration.GetSection("Jwt");
