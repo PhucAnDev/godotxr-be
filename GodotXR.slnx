@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="GodotXR.Api/GodotXR.Api.csproj" />
+  <Project Path="GodotXR.Application/GodotXR.Application.csproj" />
+  <Project Path="GodotXR.Domain/GodotXR.Domain.csproj" />
+  <Project Path="GodotXR.Infrastructure/GodotXR.Infrastructure.csproj" />
+</Solution>
