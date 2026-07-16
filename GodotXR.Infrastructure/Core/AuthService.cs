@@ -184,6 +184,23 @@ namespace GodotXR.Infrastructure.Core
             }
         }
 
+        public async Task<(bool Succeeded, bool NotFound, IEnumerable<string> Errors)> VerifyOtpAsync(string email, string otp)
+        {
+            var user = await _unitOfWork.UserRepository
+                .GetFirstOrDefaultAsync(u => u.Email == email);
+
+            if (user == null)
+                return (false, true, Enumerable.Empty<string>());
+
+            var cacheKey = $"otp:{email}";
+            var savedOtp = await _cache.GetStringAsync(cacheKey);
+
+            if (string.IsNullOrEmpty(savedOtp?.Trim()) || savedOtp.Trim() != otp?.Trim())
+                return (false, false, new[] { "Mã OTP không hợp lệ hoặc đã hết hạn." });
+
+            return (true, false, Enumerable.Empty<string>());
+        }
+
         public async Task<(bool Succeeded, bool NotFound, IEnumerable<string> Errors)> ResetPasswordAsync(ResetPasswordRequest request)
         {
             var user = await _unitOfWork.UserRepository

@@ -1,4 +1,4 @@
-﻿using GodotXR.Application.DTOs.Request.Auth;
+using GodotXR.Application.DTOs.Request.Auth;
 using GodotXR.Application.DTOs.Response;
 using GodotXR.Application.DTOs.Response.Auth;
 using GodotXR.Application.Services;
@@ -71,6 +71,23 @@ namespace GodotXR.Api.Controllers
                 return BadRequest(new ApiResponse { Success = false, Message = "Forgot password failed.", Errors = errors.ToList() });
 
             return Ok(new ApiResponse { Success = true, Message = "OTP has been sent successfully." });
+        }
+
+        [HttpPost("verify-otp")]
+        public async Task<ActionResult> VerifyOtp([FromBody] VerifyOtpRequest request)
+        {
+            if (request is null)
+                return BadRequest(new ApiResponse { Success = false, Message = "Request body is required." });
+
+            var (ok, notFound, errors) = await _authService.VerifyOtpAsync(request.Email, request.Otp);
+
+            if (notFound)
+                return NotFound(new ApiResponse { Success = false, Message = "User not found." });
+
+            if (!ok)
+                return BadRequest(new ApiResponse { Success = false, Message = errors.FirstOrDefault() ?? "Xác nhận OTP thất bại.", Errors = errors.ToList() });
+
+            return Ok(new ApiResponse { Success = true, Message = "OTP xác nhận thành công." });
         }
 
         [HttpPost("reset-password")]
