@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using GodotXR.Application.DTOs.Request.User;
 using GodotXR.Application.DTOs.Response;
 using GodotXR.Application.DTOs.Response.User;
@@ -139,7 +139,7 @@ namespace GodotXR.Application.Services
             await _unitOfWork.UserRepository.AddAsync(user);
             await _unitOfWork.SaveChangesAsync();
             var frontendUrl = _configuration["App:FrontendBaseUrl"] ?? "http://localhost:3000";
-            var verifyLink = $"{frontendUrl}/verify-email?token={verifyToken}";
+            var verifyLink = $"{frontendUrl}/verify-email?token={Uri.EscapeDataString(verifyToken)}";
 
             try
             {

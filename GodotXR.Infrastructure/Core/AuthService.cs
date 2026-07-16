@@ -1,4 +1,4 @@
-﻿using GodotXR.Application.DTOs.Request.Auth;
+using GodotXR.Application.DTOs.Request.Auth;
 using GodotXR.Application.DTOs.Response.Auth;
 using GodotXR.Application.Services;
 using GodotXR.Domain.IUnitOfWork;
@@ -242,6 +242,11 @@ namespace GodotXR.Infrastructure.Core
 
         public async Task<(bool Succeeded, IEnumerable<string> Errors)> VerifyEmailAsync(string token)
         {
+            if (!string.IsNullOrEmpty(token) && token.Contains(" "))
+            {
+                token = token.Replace(" ", "+");
+            }
+
             var user = await _unitOfWork.UserRepository
                 .GetFirstOrDefaultAsync(u => u.VerifyToken == token);
 
