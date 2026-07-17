@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using GodotXR.Application.DTOs.Request.ChildProfile;
 using GodotXR.Application.DTOs.Response;
 using GodotXR.Application.DTOs.Response.ChildProfile;
@@ -56,7 +56,7 @@ namespace GodotXR.Application.Services
 
             if (user == null)
             {
-                errors.Add("User does not exist.");
+                errors.Add("Người dùng liên kết không tồn tại.");
                 return (false, errors, null);
             }
 
@@ -68,7 +68,7 @@ namespace GodotXR.Application.Services
 
             if (result <= 0)
             {
-                errors.Add("Failed to create child profile.");
+                errors.Add("Kiến tạo hồ sơ trẻ thất bại.");
                 return (false, errors, null);
             }
 
@@ -88,7 +88,7 @@ namespace GodotXR.Application.Services
 
             if (childProfile == null)
             {
-                errors.Add("Child profile not found.");
+                errors.Add("Không tìm thấy hồ sơ trẻ.");
                 return (false, true, errors, null);
             }
 
@@ -102,7 +102,7 @@ namespace GodotXR.Application.Services
 
                 if (user == null)
                 {
-                    errors.Add("User does not exist.");
+                    errors.Add("Người dùng liên kết không tồn tại.");
                     return (false, false, errors, null);
                 }
 
@@ -136,7 +136,7 @@ namespace GodotXR.Application.Services
 
             if (result <= 0)
             {
-                errors.Add("Failed to update child profile.");
+                errors.Add("Cập nhật hồ sơ trẻ thất bại.");
                 return (false, false, errors, null);
             }
 
@@ -156,7 +156,7 @@ namespace GodotXR.Application.Services
                 return (
                     Succeeded: false,
                     NotFound: true,
-                    Errors: ["Child profile not found."]
+                    Errors: ["Không tìm thấy hồ sơ trẻ."]
                 );
             }
 
@@ -173,7 +173,7 @@ namespace GodotXR.Application.Services
                 return (
                     Succeeded: false,
                     NotFound: false,
-                    Errors: ["Failed to delete child profile."]
+                    Errors: ["Xóa hồ sơ trẻ thất bại."]
                 );
             }
 

@@ -45,7 +45,7 @@ namespace GodotXR.Api.Controllers
                 return BadRequest(new ApiResponse<ClassroomResponse>
                 {
                     Success = false,
-                    Message = "Invalid classroom id."
+                    Message = "Mã định danh lớp học không hợp lệ."
                 });
 
             var data = await _classroomService.GetClassroomByIdAsync(id);
@@ -54,7 +54,7 @@ namespace GodotXR.Api.Controllers
                 return NotFound(new ApiResponse<ClassroomResponse>
                 {
                     Success = false,
-                    Message = "Classroom not found."
+                    Message = "Không tìm thấy lớp học."
                 });
 
             return Ok(new ApiResponse<ClassroomResponse>
@@ -77,14 +77,14 @@ namespace GodotXR.Api.Controllers
                 return BadRequest(new ApiResponse<ClassroomResponse>
                 {
                     Success = false,
-                    Message = "Create classroom failed.",
+                    Message = "Kiến tạo lớp học thất bại.",
                     Errors = errors.ToList()
                 });
 
             return Ok(new ApiResponse<ClassroomResponse>
             {
                 Success = true,
-                Message = "Classroom created.",
+                Message = "Kiến tạo lớp học thành công.",
                 Data = data
             });
         }
@@ -100,7 +100,7 @@ namespace GodotXR.Api.Controllers
                 return BadRequest(new ApiResponse<ClassroomResponse>
                 {
                     Success = false,
-                    Message = "Invalid classroom id."
+                    Message = "Mã định danh lớp học không hợp lệ."
                 });
 
             var (ok, notFound, errors, data) = await _classroomService.UpdateClassroomAsync(id, request);
@@ -109,21 +109,21 @@ namespace GodotXR.Api.Controllers
                 return NotFound(new ApiResponse<ClassroomResponse>
                 {
                     Success = false,
-                    Message = "Classroom not found."
+                    Message = "Không tìm thấy lớp học."
                 });
 
             if (!ok || data == null)
                 return BadRequest(new ApiResponse<ClassroomResponse>
                 {
                     Success = false,
-                    Message = "Update classroom failed.",
+                    Message = "Cập nhật thông tin lớp học thất bại.",
                     Errors = errors.ToList()
                 });
 
             return Ok(new ApiResponse<ClassroomResponse>
             {
                 Success = true,
-                Message = "Classroom updated.",
+                Message = "Cập nhật thông tin lớp học thành công.",
                 Data = data
             });
         }
@@ -139,7 +139,7 @@ namespace GodotXR.Api.Controllers
                 return BadRequest(new ApiResponse<bool>
                 {
                     Success = false,
-                    Message = "Invalid classroom id."
+                    Message = "Mã định danh lớp học không hợp lệ."
                 });
 
             var (ok, notFound, errors) = await _classroomService.DeleteClassroomAsync(id);
@@ -148,7 +148,7 @@ namespace GodotXR.Api.Controllers
                 return NotFound(new ApiResponse<bool>
                 {
                     Success = false,
-                    Message = "Classroom not found.",
+                    Message = "Không tìm thấy lớp học.",
                     Data = false
                 });
 
@@ -156,7 +156,7 @@ namespace GodotXR.Api.Controllers
                 return BadRequest(new ApiResponse<bool>
                 {
                     Success = false,
-                    Message = "Delete classroom failed.",
+                    Message = "Xóa lớp học thất bại.",
                     Errors = errors.ToList(),
                     Data = false
                 });
@@ -164,7 +164,7 @@ namespace GodotXR.Api.Controllers
             return Ok(new ApiResponse<bool>
             {
                 Success = true,
-                Message = "Classroom deleted.",
+                Message = "Xóa lớp học thành công.",
                 Data = true
             });
         }
@@ -178,7 +178,7 @@ namespace GodotXR.Api.Controllers
                 return BadRequest(new ApiResponse<PagedResponse<ClassroomResponse>>
                 {
                     Success = false,
-                    Message = "Invalid teacher id."
+                    Message = "Mã định danh giáo viên không hợp lệ."
                 });
 
             var data = await _classroomService.GetClassroomsByTeacherIdAsync(teacherId, query.PageNumber, query.PageSize);

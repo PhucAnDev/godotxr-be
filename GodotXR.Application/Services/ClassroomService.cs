@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using GodotXR.Application.DTOs.Request.Classroom;
 using GodotXR.Application.DTOs.Response;
 using GodotXR.Application.DTOs.Response.Classroom;
@@ -53,7 +53,7 @@ namespace GodotXR.Application.Services
             CreateClassroomAsync(CreateClassroomRequest request)
         {
             if (request.StartDate >= request.EndDate)
-                return (false, new[] { "Start date must be before end date." }, null);
+                return (false, new[] { "Ngày bắt đầu phải trước ngày kết thúc học phần." }, null);
             var teacher = await _unitOfWork.UserRepository
                 .GetFirstOrDefaultAsync(
                     filter: u => u.Id == request.UserId
@@ -64,7 +64,7 @@ namespace GodotXR.Application.Services
                     tracked: false);
 
             if (teacher == null)
-                return (false, new[] { "Teacher not found, inactive, or does not have Teacher role." }, null);
+                return (false, new[] { "Không tìm thấy giáo viên phụ trách, tài khoản bị khóa hoặc không hợp lệ." }, null);
             var program = await _unitOfWork.ProgramRepository
                 .GetFirstOrDefaultAsync(
                     filter: p => p.Id == request.ProgramId
@@ -73,16 +73,16 @@ namespace GodotXR.Application.Services
                     tracked: false);
 
             if (program == null)
-                return (false, new[] { "Program not found or inactive." }, null);
+                return (false, new[] { "Không tìm thấy chương trình học hoặc chương trình học đã ngừng hoạt động." }, null);
             var semester = await _unitOfWork.SemesterRepository
                 .GetFirstOrDefaultAsync(
                     filter: s => s.Id == request.SemesterId && !s.IsDeleted,
                     tracked: false);
 
             if (semester == null)
-                return (false, new[] { "Semester not found." }, null);
+                return (false, new[] { "Không tìm thấy học kỳ liên kết." }, null);
             if (request.StartDate < semester.StartDate || request.EndDate > semester.EndDate)
-                return (false, new[] { "Classroom period must fall within the semester period." }, null);
+                return (false, new[] { "Thời gian lớp học phải nằm trong khoảng thời gian của học kỳ." }, null);
 
             var classroom = new Classroom
             {
@@ -118,7 +118,7 @@ namespace GodotXR.Application.Services
             if (classroom == null)
                 return (false, true, Enumerable.Empty<string>(), null);
             if (request.StartDate >= request.EndDate)
-                return (false, false, new[] { "Start date must be before end date." }, null);
+                return (false, false, new[] { "Ngày bắt đầu phải trước ngày kết thúc học phần." }, null);
             var teacher = await _unitOfWork.UserRepository
                 .GetFirstOrDefaultAsync(
                     filter: u => u.Id == request.UserId
@@ -129,7 +129,7 @@ namespace GodotXR.Application.Services
                     tracked: false);
 
             if (teacher == null)
-                return (false, false, new[] { "Teacher not found, inactive, or does not have Teacher role." }, null);
+                return (false, false, new[] { "Không tìm thấy giáo viên phụ trách, tài khoản bị khóa hoặc không hợp lệ." }, null);
             var program = await _unitOfWork.ProgramRepository
                 .GetFirstOrDefaultAsync(
                     filter: p => p.Id == request.ProgramId
@@ -138,16 +138,16 @@ namespace GodotXR.Application.Services
                     tracked: false);
 
             if (program == null)
-                return (false, false, new[] { "Program not found or inactive." }, null);
+                return (false, false, new[] { "Không tìm thấy chương trình học hoặc chương trình học đã ngừng hoạt động." }, null);
             var semester = await _unitOfWork.SemesterRepository
                 .GetFirstOrDefaultAsync(
                     filter: s => s.Id == request.SemesterId && !s.IsDeleted,
                     tracked: false);
 
             if (semester == null)
-                return (false, false, new[] { "Semester not found." }, null);
+                return (false, false, new[] { "Không tìm thấy học kỳ liên kết." }, null);
             if (request.StartDate < semester.StartDate || request.EndDate > semester.EndDate)
-                return (false, false, new[] { "Classroom period must fall within the semester period." }, null);
+                return (false, false, new[] { "Thời gian lớp học phải nằm trong khoảng thời gian của học kỳ." }, null);
 
             classroom.UserId = request.UserId;
             classroom.ProgramId = request.ProgramId;
@@ -181,10 +181,10 @@ namespace GodotXR.Application.Services
             if (classroom == null)
                 return (false, true, Enumerable.Empty<string>());
             if (classroom.Enrollments.Any(e => !e.IsDeleted && e.Status == "Active"))
-                return (false, false, new[] { "Cannot delete a classroom that has active enrollments." });
+                return (false, false, new[] { "Không thể xóa lớp học có học sinh đang học." });
 
             if (classroom.Status == "Active")
-                return (false, false, new[] { "Cannot delete an active classroom." });
+                return (false, false, new[] { "Không thể xóa lớp học đang ở trạng thái Hoạt động." });
 
             classroom.IsDeleted = true;
             classroom.DeletedAt = DateTime.UtcNow;

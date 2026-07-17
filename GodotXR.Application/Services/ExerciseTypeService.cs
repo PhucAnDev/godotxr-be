@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using GodotXR.Application.DTOs.Request.ExerciseType;
 using GodotXR.Application.DTOs.Response;
 using GodotXR.Application.DTOs.Response.ExerciseType;
@@ -55,7 +55,7 @@ namespace GodotXR.Application.Services
                     filter: t => t.TypeName == request.TypeName.Trim() && !t.IsDeleted,
                     tracked: false);
             if (duplicate != null)
-                return (false, new[] { "Exercise type name already exists." }, null);
+                return (false, new[] { "Tên loại bài tập đã tồn tại." }, null);
 
             var entity = new ExerciseType
             {
@@ -88,7 +88,7 @@ namespace GodotXR.Application.Services
                     .Any(e => !e.IsDeleted && e.Status == "Active");
                 if (hasActiveExercises)
                     return (false, false,
-                        new[] { "Cannot deactivate an exercise type that has active exercises." },
+                        new[] { "Không thể ngưng hoạt động loại bài tập đang có chứa các bài tập đang hoạt động." },
                         null);
             }
 
@@ -100,7 +100,7 @@ namespace GodotXR.Application.Services
                               && t.Id != id,
                     tracked: false);
             if (duplicate != null)
-                return (false, false, new[] { "Exercise type name already exists." }, null);
+                return (false, false, new[] { "Tên loại bài tập đã tồn tại." }, null);
 
             entity.TypeName = request.TypeName.Trim();
             entity.Description = request.Description;
@@ -125,7 +125,7 @@ namespace GodotXR.Application.Services
             // Block nếu còn Exercise chưa xóa
             if (entity.Exercises.Any(e => !e.IsDeleted))
                 return (false, false,
-                    new[] { "Cannot delete an exercise type that has exercises." });
+                    new[] { "Không thể xóa loại bài tập đang có chứa các bài tập." });
 
             entity.IsDeleted = true;
             entity.DeletedAt = DateTime.UtcNow;

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using GodotXR.Application.DTOs.Request.SchoolYear;
 using GodotXR.Application.DTOs.Response;
 using GodotXR.Application.DTOs.Response.SchoolYear;
@@ -58,21 +58,21 @@ namespace GodotXR.Application.Services
         {
             // BR-43: StartDate không được sau EndDate
             if (request.StartDate >= request.EndDate)
-                return (false, new[] { "Start date must be before end date." }, null);
+                return (false, new[] { "Ngày bắt đầu phải trước ngày kết thúc học phần." }, null);
 
             // Validation: Không được trùng thời gian với SchoolYear khác
             var hasOverlap = await _unitOfWork.SchoolYearRepository
                 .HasOverlappingAsync(request.StartDate, request.EndDate);
 
             if (hasOverlap)
-                return (false, new[] { "School year period overlaps with an existing school year." }, null);
+                return (false, new[] { "Thời gian niên khóa bị trùng lặp với một niên khóa khác đã tồn tại." }, null);
 
             // BR-44: Chỉ 1 Active tại một thời điểm
             if (request.Status == "Active")
             {
                 var hasActive = await _unitOfWork.SchoolYearRepository.HasActiveSchoolYearAsync();
                 if (hasActive)
-                    return (false, new[] { "Another school year is already active." }, null);
+                    return (false, new[] { "Đã có một niên khóa khác đang ở trạng thái Hoạt động." }, null);
             }
 
             var schoolYear = new SchoolYear
@@ -103,21 +103,21 @@ namespace GodotXR.Application.Services
 
             // BR-43
             if (request.StartDate >= request.EndDate)
-                return (false, false, new[] { "Start date must be before end date." }, null);
+                return (false, false, new[] { "Ngày bắt đầu phải trước ngày kết thúc học phần." }, null);
 
             // Validation: Không được trùng thời gian với SchoolYear khác
             var hasOverlap = await _unitOfWork.SchoolYearRepository
                 .HasOverlappingAsync(request.StartDate, request.EndDate, excludeId: id);
 
             if (hasOverlap)
-                return (false, false, new[] { "School year period overlaps with an existing school year." }, null);
+                return (false, false, new[] { "Thời gian niên khóa bị trùng lặp với một niên khóa khác đã tồn tại." }, null);
 
             // BR-44
             if (request.Status == "Active" && schoolYear.Status != "Active")
             {
                 var hasActive = await _unitOfWork.SchoolYearRepository.HasActiveSchoolYearAsync(excludeId: id);
                 if (hasActive)
-                    return (false, false, new[] { "Another school year is already active." }, null);
+                    return (false, false, new[] { "Đã có một niên khóa khác đang ở trạng thái Hoạt động." }, null);
             }
 
             schoolYear.YearName = request.YearName.Trim();
@@ -143,10 +143,10 @@ namespace GodotXR.Application.Services
                 return (false, true, Enumerable.Empty<string>());
 
             if (schoolYear.Semesters.Any(s => !s.IsDeleted))
-                return (false, false, new[] { "Cannot delete a school year that has active semesters." });
+                return (false, false, new[] { "Không thể xóa niên khóa đang có học kỳ hoạt động." });
 
             if (schoolYear.Status == "Active")
-                return (false, false, new[] { "Cannot delete an active school year." });
+                return (false, false, new[] { "Không thể xóa niên khóa đang hoạt động." });
 
             schoolYear.IsDeleted = true;
             schoolYear.DeletedAt = DateTime.UtcNow;
@@ -167,7 +167,7 @@ namespace GodotXR.Application.Services
                 return (false, true, Enumerable.Empty<string>(), null);
 
             if (schoolYear.Status == "Active")
-                return (false, false, new[] { "This school year is already active." }, null);
+                return (false, false, new[] { "Niên khóa này đã ở trạng thái Hoạt động rồi." }, null);
 
             var currentActives = await _unitOfWork.SchoolYearRepository
                 .FindAsync(filter: sy => !sy.IsDeleted && sy.Status == "Active");

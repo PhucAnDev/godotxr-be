@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using GodotXR.Application.DTOs.Request.Exercise;
 using GodotXR.Application.DTOs.Response;
 using GodotXR.Application.DTOs.Response.Exercise;
@@ -61,18 +61,18 @@ namespace GodotXR.Application.Services
         {
             // BR-67: DurationLimit > 0
             if (request.DurationLimit <= 0)
-                return (false, new[] { "Duration limit must be greater than zero." }, null);
+                return (false, new[] { "Giới hạn thời gian phải lớn hơn 0." }, null);
 
             // BR-68: DifficultyLevel hợp lệ
             if (!ExerciseConstants.AllowedDifficultyLevels.Contains(request.DifficultyLevel))
                 return (false,
-                    new[] { $"DifficultyLevel must be one of: {string.Join(", ", ExerciseConstants.AllowedDifficultyLevels)}." },
+                    new[] { $"Mức độ khó phải thuộc một trong các giá trị: {string.Join(", ", ExerciseConstants.AllowedDifficultyLevels)}." },
                     null);
 
             // BR-70: Không tạo thẳng Status=Active vì chưa có Question nào
             if (request.Status == "Active")
                 return (false,
-                    new[] { "Cannot create an exercise with Status=Active. Create as Inactive first, add questions, then activate." },
+                    new[] { "Không thể trực tiếp kiến tạo bài tập có trạng thái Hoạt động. Vui lòng tạo dưới dạng Chưa kích hoạt (Inactive) trước, thêm câu hỏi, sau đó mới kích hoạt bài tập." },
                     null);
 
             // BR-56: Teacher hợp lệ
@@ -85,7 +85,7 @@ namespace GodotXR.Application.Services
                     includeProperties: "Role",
                     tracked: false);
             if (teacher == null)
-                return (false, new[] { "Teacher not found or invalid." }, null);
+                return (false, new[] { "Không tìm thấy giáo viên phụ trách hoặc thông tin giáo viên không hợp lệ." }, null);
 
             // BR-62/63: Lesson phải Active
             var lesson = await _unitOfWork.LessonRepository
@@ -96,11 +96,11 @@ namespace GodotXR.Application.Services
                     includeProperties: "Program",
                     tracked: false);
             if (lesson == null)
-                return (false, new[] { "Lesson not found or inactive." }, null);
+                return (false, new[] { "Không tìm thấy bài học hoặc bài học đã ngừng hoạt động." }, null);
 
             // BR-63: Program của Lesson phải Active
             if (lesson.Program == null || lesson.Program.IsDeleted || lesson.Program.Status != "Active")
-                return (false, new[] { "Program of this lesson is inactive." }, null);
+                return (false, new[] { "Chương trình học chứa bài học này không ở trạng thái Hoạt động." }, null);
 
             // BR-66: ExerciseType phải Active
             var exerciseType = await _unitOfWork.ExerciseTypeRepository
@@ -110,7 +110,7 @@ namespace GodotXR.Application.Services
                               && t.IsActive,
                     tracked: false);
             if (exerciseType == null)
-                return (false, new[] { "Exercise type not found or inactive." }, null);
+                return (false, new[] { "Không tìm thấy loại bài tập hoặc loại bài tập đã bị ngừng hoạt động." }, null);
 
             var entity = new Exercise
             {
@@ -154,12 +154,12 @@ namespace GodotXR.Application.Services
             // BR-67
             if (request.DurationLimit <= 0)
                 return (false, false,
-                    new[] { "Duration limit must be greater than zero." }, null);
+                    new[] { "Giới hạn thời gian phải lớn hơn 0." }, null);
 
             // BR-68
             if (!ExerciseConstants.AllowedDifficultyLevels.Contains(request.DifficultyLevel))
                 return (false, false,
-                    new[] { $"DifficultyLevel must be one of: {string.Join(", ", ExerciseConstants.AllowedDifficultyLevels)}." },
+                    new[] { $"Mức độ khó phải thuộc một trong các giá trị: {string.Join(", ", ExerciseConstants.AllowedDifficultyLevels)}." },
                     null);
 
             // BR-70: Chỉ được activate nếu có ít nhất 1 Question
@@ -168,7 +168,7 @@ namespace GodotXR.Application.Services
                 var hasValidQuestions = entity.ExerciseQuestions.Any(q => !q.IsDeleted);
                 if (!hasValidQuestions)
                     return (false, false,
-                        new[] { "Cannot activate an exercise that has no questions." }, null);
+                        new[] { "Không thể kích hoạt bài tập chưa có câu hỏi nào." }, null);
             }
 
             // BR-56
@@ -181,7 +181,7 @@ namespace GodotXR.Application.Services
                     includeProperties: "Role",
                     tracked: false);
             if (teacher == null)
-                return (false, false, new[] { "Teacher not found or invalid." }, null);
+                return (false, false, new[] { "Không tìm thấy giáo viên phụ trách hoặc thông tin giáo viên không hợp lệ." }, null);
 
             // BR-62/63: Lesson phải Active
             var lesson = await _unitOfWork.LessonRepository
@@ -192,11 +192,11 @@ namespace GodotXR.Application.Services
                     includeProperties: "Program",
                     tracked: false);
             if (lesson == null)
-                return (false, false, new[] { "Lesson not found or inactive." }, null);
+                return (false, false, new[] { "Không tìm thấy bài học hoặc bài học đã ngừng hoạt động." }, null);
 
             // BR-63: Program phải Active
             if (lesson.Program == null || lesson.Program.IsDeleted || lesson.Program.Status != "Active")
-                return (false, false, new[] { "Program of this lesson is inactive." }, null);
+                return (false, false, new[] { "Chương trình học chứa bài học này không ở trạng thái Hoạt động." }, null);
 
             // BR-66
             var exerciseType = await _unitOfWork.ExerciseTypeRepository
@@ -206,7 +206,7 @@ namespace GodotXR.Application.Services
                               && t.IsActive,
                     tracked: false);
             if (exerciseType == null)
-                return (false, false, new[] { "Exercise type not found or inactive." }, null);
+                return (false, false, new[] { "Không tìm thấy loại bài tập hoặc loại bài tập đã bị ngừng hoạt động." }, null);
 
             entity.TeacherId = request.TeacherId;
             entity.LessonId = request.LessonId;
@@ -244,7 +244,7 @@ namespace GodotXR.Application.Services
             // BR-72: Không xóa nếu có historical Results
             if (entity.Results.Any())
                 return (false, false,
-                    new[] { "Cannot delete an exercise that has historical results." });
+                    new[] { "Không thể xóa bài tập đã có lịch sử kết quả làm bài của học sinh." });
 
             entity.IsDeleted = true;
             entity.DeletedAt = DateTime.UtcNow;

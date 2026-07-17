@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using GodotXR.Application.DTOs.Request.Result;
 using GodotXR.Application.DTOs.Response;
 using GodotXR.Application.DTOs.Response.Result;
@@ -22,10 +22,10 @@ namespace GodotXR.Application.Services
             var errors = new List<string>();
 
             if (request.ExerciseId.HasValue && request.LessonId.HasValue)
-                errors.Add("Only one of ExerciseId or LessonId can be provided.");
+                errors.Add("Chỉ được cung cấp một trong hai thông tin: mã bài tập (ExerciseId) hoặc mã bài học (LessonId).");
 
             if (!request.ExerciseId.HasValue && !request.LessonId.HasValue)
-                errors.Add("Either ExerciseId or LessonId must be provided.");
+                errors.Add("Phải cung cấp ít nhất một thông tin: mã bài tập (ExerciseId) hoặc mã bài học (LessonId).");
 
             if (errors.Any())
                 return (false, false, errors, null);
@@ -42,14 +42,14 @@ namespace GodotXR.Application.Services
             // BR-75: Child phải active
             var child = await _unitOfWork.ChildProfileRepository.GetByIdAsync(request.ChildId);
             if (child == null)
-                return (false, true, new[] { "Child not found." }, null);
+                return (false, true, new[] { "Không tìm thấy hồ sơ trẻ." }, null);
             if (child.Status != "Active")
-                errors.Add("Child profile is not active.");
+                errors.Add("Hồ sơ trẻ không ở trạng thái Hoạt động.");
 
             // BR-76: phải có active Enrollment
             var enrollments = await _unitOfWork.EnrollmentRepository.GetByChildIdAsync(request.ChildId);
             if (!enrollments.Any(e => e.Status == "Active" && !e.IsDeleted))
-                errors.Add("Child does not have an active enrollment.");
+                errors.Add("Trẻ chưa có hồ sơ ghi danh hoạt động tại bất kỳ lớp nào.");
 
             // BR-84: Exercise phải tồn tại
             if (resultType == ResultType.Exercise)
@@ -57,35 +57,35 @@ namespace GodotXR.Application.Services
                 var exercise = await _unitOfWork.ExerciseRepository.GetByIdAsync(request.ExerciseId!.Value);
 
                 if (exercise == null)
-                    return (false, true, new[] { "Exercise not found." }, null);
+                    return (false, true, new[] { "Không tìm thấy bài tập." }, null);
 
                 // BR-74: Exercise phải active
                 if (exercise.Status != "Active")
-                    errors.Add("Exercise is not active.");
+                    errors.Add("Bài tập không ở trạng thái Hoạt động.");
             }
             else
             {
                 var lesson = await _unitOfWork.LessonRepository.GetByIdAsync(request.LessonId!.Value);
 
                 if (lesson == null)
-                    return (false, true, new[] { "Lesson not found." }, null);
+                    return (false, true, new[] { "Không tìm thấy bài học." }, null);
 
                 if (lesson.Status != "Active")
-                    errors.Add("Lesson is not active.");
+                    errors.Add("Bài học không ở trạng thái Hoạt động.");
             }
 
             // BR-86: Score range
             if (request.Score < 0 || request.Score > 100)
-                errors.Add("Score must be between 0 and 100.");
+                errors.Add("Điểm số phải nằm trong khoảng từ 0 đến 100.");
 
             // BR-87: Duration không âm
             if (request.DurationSeconds < 0)
-                errors.Add("Duration must not be negative.");
+                errors.Add("Thời lượng không được là số âm.");
 
             // BR-85: CompletionStatus hợp lệ
             var validStatuses = new[] { "Completed", "Incomplete" };
             if (!validStatuses.Contains(request.CompletionStatus))
-                errors.Add("Invalid completion status. Must be 'Completed' or 'Incomplete'.");
+                errors.Add("Trạng thái hoàn thành không hợp lệ. Chỉ chấp nhận: 'Completed' hoặc 'Incomplete'.");
 
             // BR-97: AccuracyScore range
             //foreach (var pd in request.PronunciationDetails)

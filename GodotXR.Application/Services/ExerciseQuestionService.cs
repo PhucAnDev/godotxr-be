@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using GodotXR.Application.DTOs.Request.ExerciseQuestion;
 using GodotXR.Application.DTOs.Response;
 using GodotXR.Application.DTOs.Response.ExerciseQuestion;
@@ -72,11 +72,11 @@ namespace GodotXR.Application.Services
         {
             // BR-69: validate 3 required fields ở service layer
             if (string.IsNullOrWhiteSpace(request.QuestionSentence))
-                return (false, new[] { "Question sentence is required." }, null);
+                return (false, new[] { "Vui lòng nhập câu hỏi mẫu." }, null);
             if (string.IsNullOrWhiteSpace(request.AnswerSentence))
-                return (false, new[] { "Answer sentence is required." }, null);
+                return (false, new[] { "Vui lòng nhập câu trả lời mẫu." }, null);
             if (string.IsNullOrWhiteSpace(request.InputType))
-                return (false, new[] { "Input type is required." }, null);
+                return (false, new[] { "Vui lòng nhập loại câu hỏi." }, null);
 
             // BR-71: validate AudioURL extension
             if (!string.IsNullOrWhiteSpace(request.AudioURL))
@@ -84,7 +84,7 @@ namespace GodotXR.Application.Services
                 var audioExt = GetExtensionFromUrl(request.AudioURL);
                 if (audioExt == null || !ExerciseConstants.AllowedAudioExtensions.Contains(audioExt))
                     return (false,
-                        new[] { $"Audio file must be one of: {string.Join(", ", ExerciseConstants.AllowedAudioExtensions)}." },
+                        new[] { $"Tập tin âm thanh phải thuộc loại: {string.Join(", ", ExerciseConstants.AllowedAudioExtensions)}." },
                         null);
             }
 
@@ -94,7 +94,7 @@ namespace GodotXR.Application.Services
                 var imageExt = GetExtensionFromUrl(request.ImageURL);
                 if (imageExt == null || !ExerciseConstants.AllowedImageExtensions.Contains(imageExt))
                     return (false,
-                        new[] { $"Image file must be one of: {string.Join(", ", ExerciseConstants.AllowedImageExtensions)}." },
+                        new[] { $"Tập tin hình ảnh phải thuộc loại: {string.Join(", ", ExerciseConstants.AllowedImageExtensions)}." },
                         null);
             }
 
@@ -108,7 +108,7 @@ namespace GodotXR.Application.Services
                     includeProperties: "Role",
                     tracked: false);
             if (teacher == null)
-                return (false, new[] { "Teacher not found or invalid." }, null);
+                return (false, new[] { "Không tìm thấy giáo viên phụ trách hoặc thông tin giáo viên không hợp lệ." }, null);
 
             // BR-60: Exercise phải tồn tại (không check Active để tránh deadlock với BR-70)
             var exercise = await _unitOfWork.ExerciseRepository
@@ -116,7 +116,7 @@ namespace GodotXR.Application.Services
                     filter: e => e.Id == request.ExerciseId && !e.IsDeleted,
                     tracked: false);
             if (exercise == null)
-                return (false, new[] { "Exercise not found." }, null);
+                return (false, new[] { "Không tìm thấy bài tập." }, null);
 
             var entity = new ExerciseQuestion
             {
@@ -153,11 +153,11 @@ namespace GodotXR.Application.Services
 
             // BR-69
             if (string.IsNullOrWhiteSpace(request.QuestionSentence))
-                return (false, false, new[] { "Question sentence is required." }, null);
+                return (false, false, new[] { "Vui lòng nhập câu hỏi mẫu." }, null);
             if (string.IsNullOrWhiteSpace(request.AnswerSentence))
-                return (false, false, new[] { "Answer sentence is required." }, null);
+                return (false, false, new[] { "Vui lòng nhập câu trả lời mẫu." }, null);
             if (string.IsNullOrWhiteSpace(request.InputType))
-                return (false, false, new[] { "Input type is required." }, null);
+                return (false, false, new[] { "Vui lòng nhập loại câu hỏi." }, null);
 
             // BR-71: AudioURL
             if (!string.IsNullOrWhiteSpace(request.AudioURL))
@@ -165,7 +165,7 @@ namespace GodotXR.Application.Services
                 var audioExt = GetExtensionFromUrl(request.AudioURL);
                 if (audioExt == null || !ExerciseConstants.AllowedAudioExtensions.Contains(audioExt))
                     return (false, false,
-                        new[] { $"Audio file must be one of: {string.Join(", ", ExerciseConstants.AllowedAudioExtensions)}." },
+                        new[] { $"Tập tin âm thanh phải thuộc loại: {string.Join(", ", ExerciseConstants.AllowedAudioExtensions)}." },
                         null);
             }
 
@@ -175,7 +175,7 @@ namespace GodotXR.Application.Services
                 var imageExt = GetExtensionFromUrl(request.ImageURL);
                 if (imageExt == null || !ExerciseConstants.AllowedImageExtensions.Contains(imageExt))
                     return (false, false,
-                        new[] { $"Image file must be one of: {string.Join(", ", ExerciseConstants.AllowedImageExtensions)}." },
+                        new[] { $"Tập tin hình ảnh phải thuộc loại: {string.Join(", ", ExerciseConstants.AllowedImageExtensions)}." },
                         null);
             }
 
@@ -189,7 +189,7 @@ namespace GodotXR.Application.Services
                     includeProperties: "Role",
                     tracked: false);
             if (teacher == null)
-                return (false, false, new[] { "Teacher not found or invalid." }, null);
+                return (false, false, new[] { "Không tìm thấy giáo viên phụ trách hoặc thông tin giáo viên không hợp lệ." }, null);
 
             // BR-60: Exercise tồn tại
             var exercise = await _unitOfWork.ExerciseRepository
@@ -197,7 +197,7 @@ namespace GodotXR.Application.Services
                     filter: e => e.Id == request.ExerciseId && !e.IsDeleted,
                     tracked: false);
             if (exercise == null)
-                return (false, false, new[] { "Exercise not found." }, null);
+                return (false, false, new[] { "Không tìm thấy bài tập." }, null);
 
             entity.ExerciseId = request.ExerciseId;
             entity.TeacherId = request.TeacherId;

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using GodotXR.Application.DTOs.Request.Semester;
 using GodotXR.Application.DTOs.Response;
 using GodotXR.Application.DTOs.Response.Semester;
@@ -57,7 +57,7 @@ namespace GodotXR.Application.Services
             CreateSemesterAsync(CreateSemesterRequest request)
         {
             if (request.StartDate >= request.EndDate)
-                return (false, new[] { "Start date must be before end date." }, null);
+                return (false, new[] { "Ngày bắt đầu phải trước ngày kết thúc học phần." }, null);
 
             var schoolYear = await _unitOfWork.SchoolYearRepository
                 .GetFirstOrDefaultAsync(
@@ -65,16 +65,16 @@ namespace GodotXR.Application.Services
                     tracked: false);
 
             if (schoolYear == null)
-                return (false, new[] { "School year not found." }, null);
+                return (false, new[] { "Không tìm thấy niên khóa." }, null);
 
             if (request.StartDate < schoolYear.StartDate || request.EndDate > schoolYear.EndDate)
-                return (false, new[] { "Semester period must fall within the school year period." }, null);
+                return (false, new[] { "Thời gian học kỳ phải nằm trong khoảng thời gian của niên khóa." }, null);
 
             var hasOverlap = await _unitOfWork.SemesterRepository
                 .HasOverlappingAsync(request.SchoolYearId, request.StartDate, request.EndDate);
 
             if (hasOverlap)
-                return (false, new[] { "Semester period overlaps with an existing semester in the same school year." }, null);
+                return (false, new[] { "Thời gian học kỳ bị trùng lặp với một học kỳ khác trong cùng niên khóa." }, null);
 
             var teacher = await _unitOfWork.UserRepository
                 .GetFirstOrDefaultAsync(
@@ -82,7 +82,7 @@ namespace GodotXR.Application.Services
                     tracked: false);
 
             if (teacher == null)
-                return (false, new[] { "Teacher not found or inactive." }, null);
+                return (false, new[] { "Không tìm thấy giáo viên phụ trách hoặc tài khoản giáo viên đã bị khóa." }, null);
 
             var semester = new Semester
             {
@@ -121,7 +121,7 @@ namespace GodotXR.Application.Services
                 return (false, true, Enumerable.Empty<string>(), null);
 
             if (request.StartDate >= request.EndDate)
-                return (false, false, new[] { "Start date must be before end date." }, null);
+                return (false, false, new[] { "Ngày bắt đầu phải trước ngày kết thúc học phần." }, null);
 
             var schoolYear = await _unitOfWork.SchoolYearRepository
                 .GetFirstOrDefaultAsync(
@@ -129,16 +129,16 @@ namespace GodotXR.Application.Services
                     tracked: false);
 
             if (schoolYear == null)
-                return (false, false, new[] { "School year not found." }, null);
+                return (false, false, new[] { "Không tìm thấy niên khóa." }, null);
 
             if (request.StartDate < schoolYear.StartDate || request.EndDate > schoolYear.EndDate)
-                return (false, false, new[] { "Semester period must fall within the school year period." }, null);
+                return (false, false, new[] { "Thời gian học kỳ phải nằm trong khoảng thời gian của niên khóa." }, null);
 
             var hasOverlap = await _unitOfWork.SemesterRepository
                 .HasOverlappingAsync(request.SchoolYearId, request.StartDate, request.EndDate, excludeId: id);
 
             if (hasOverlap)
-                return (false, false, new[] { "Semester period overlaps with an existing semester in the same school year." }, null);
+                return (false, false, new[] { "Thời gian học kỳ bị trùng lặp với một học kỳ khác trong cùng niên khóa." }, null);
 
             var teacher = await _unitOfWork.UserRepository
                 .GetFirstOrDefaultAsync(
@@ -146,7 +146,7 @@ namespace GodotXR.Application.Services
                     tracked: false);
 
             if (teacher == null)
-                return (false, false, new[] { "Teacher not found or inactive." }, null);
+                return (false, false, new[] { "Không tìm thấy giáo viên phụ trách hoặc tài khoản giáo viên đã bị khóa." }, null);
 
             semester.SemesterName = request.SemesterName.Trim();
             semester.SchoolYearId = request.SchoolYearId;
@@ -181,10 +181,10 @@ namespace GodotXR.Application.Services
                 return (false, true, Enumerable.Empty<string>());
 
             if (semester.Classrooms.Any(c => !c.IsDeleted))
-                return (false, false, new[] { "Cannot delete a semester that has active classrooms." });
+                return (false, false, new[] { "Không thể xóa học kỳ đang có lớp học hoạt động." });
 
             if (semester.Status == "Active")
-                return (false, false, new[] { "Cannot delete an active semester." });
+                return (false, false, new[] { "Không thể xóa học kỳ đang hoạt động." });
 
             semester.IsDeleted = true;
             semester.DeletedAt = DateTime.UtcNow;
