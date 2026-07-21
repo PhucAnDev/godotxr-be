@@ -52,6 +52,19 @@ namespace GodotXR.Api.Controllers
         }
     }
 
+    public class AudioChunkResponse
+    {
+        public int ChunkIndex { get; set; }
+        public string ChunkUrl { get; set; } = null!;
+
+        public AudioChunkResponse(int chunkIndex, string chunkUrl)
+        {
+            ChunkIndex = chunkIndex;
+            ChunkUrl = chunkUrl;
+        }
+    }
+
+
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "Parent")]
@@ -120,6 +133,30 @@ namespace GodotXR.Api.Controllers
             return Ok(new UploadAudioChunkResponse("ChunkUploaded", request.ChunkIndex, chunkUrl));
         }
 
+        [HttpGet("chunks/{childProfileId}/{sessionId}")]
+        public async Task<ActionResult<IEnumerable<AudioChunkResponse>>> GetChunks(
+            int childProfileId,
+            string sessionId,
+            CancellationToken ct)
+        {
+            var prefix = $"records/{childProfileId}/{sessionId}/chunks/";
+            var keys = await _storage.ListObjectsAsync(prefix, ct);
+
+            var result = new List<AudioChunkResponse>();
+            foreach (var key in keys)
+            {
+                var fileName = Path.GetFileNameWithoutExtension(key);
+                if (fileName != null && fileName.StartsWith("chunk_") && int.TryParse(fileName.Substring("chunk_".Length), out var index))
+                {
+                    var chunkUrl = await _storage.GetPresignedUrlAsync(key, 3600, ct);
+                    result.Add(new AudioChunkResponse(index, chunkUrl));
+                }
+            }
+
+            return Ok(result.OrderBy(c => c.ChunkIndex));
+        }
+
+
         [HttpGet("{childProfileId}")]
         public async Task<ActionResult<IEnumerable<FileGroupResponse>>> GetByChildProfile(
             int childProfileId,
@@ -181,7 +218,7 @@ namespace GodotXR.Api.Controllers
             return Ok(new FileGroupResponse(folderId, metadataUrl, audioUrl));
         }
 
-        [HttpGet("{childProfileId}/{folderId}/metadata")]
+        [HttpGet("{childProfileId}/{folderId}/DownloadMetadata")]
         public async Task<IActionResult> DownloadMetadata(
             int childProfileId,
             Guid folderId,
@@ -201,7 +238,7 @@ namespace GodotXR.Api.Controllers
             }
         }
 
-        [HttpGet("{childProfileId}/{folderId}/audio")]
+        [HttpGet("{childProfileId}/{folderId}/DownloadAudio")]
         public async Task<IActionResult> DownloadAudio(
             int childProfileId,
             Guid folderId,
@@ -218,6 +255,27 @@ namespace GodotXR.Api.Controllers
             catch (Exception)
             {
                 return NotFound("Audio file not found.");
+            }
+        }
+
+        [HttpGet("chunks/{childProfileId}/{sessionId}/{chunkIndex}/DownloadChunk")]
+        public async Task<IActionResult> DownloadChunk(
+            int childProfileId,
+            string sessionId,
+            int chunkIndex,
+            CancellationToken ct)
+        {
+            var objectName = $"records/{childProfileId}/{sessionId}/chunks/chunk_{chunkIndex}.wav";
+            var memoryStream = new MemoryStream();
+            try
+            {
+                await _storage.DownloadAsync(objectName, memoryStream, ct);
+                memoryStream.Position = 0;
+                return File(memoryStream, "audio/wav", $"chunk_{chunkIndex}.wav");
+            }
+            catch (Exception)
+            {
+                return NotFound("Audio chunk not found.");
             }
         }
     }
