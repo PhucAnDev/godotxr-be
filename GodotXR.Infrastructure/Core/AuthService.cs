@@ -76,52 +76,59 @@ namespace GodotXR.Infrastructure.Core
 
         public async Task<(bool Succeeded, IEnumerable<string> Errors, TokenModel? Data)> RefreshTokenAsync(RefreshTokenRequest request)
         {
-            var principal = _tokenService.GetPrincipalFromExpiredToken(request.AccessToken);
-
-            if (principal == null)
-                return (false, new[] { "Invalid access token." }, null);
-
-            var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (!int.TryParse(userIdClaim, out var userId))
-                return (false, new[] { "Invalid token." }, null);
-
-            var user = await _unitOfWork.UserRepository.GetFirstOrDefaultAsync(
-                u => u.Id == userId,
-                includeProperties: "Role");
-
-            if (user == null)
-                return (false, new[] { "User not found." }, null);
-
-            var cacheKey = $"refreshToken:{user.Email}";
-            var savedRefreshToken = await _cache.GetStringAsync(cacheKey);
-
-            if (savedRefreshToken != request.RefreshToken)
-                return (false, new[] { "Invalid refresh token." }, null);
-
-            var newAccessToken = _tokenService.GenerateAccessToken(user);
-            var newRefreshToken = _tokenService.GenerateRefreshToken();
-
-            await _cache.SetStringAsync(cacheKey, newRefreshToken, new DistributedCacheEntryOptions
+            try
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7)
-            });
+                var principal = _tokenService.GetPrincipalFromExpiredToken(request.AccessToken);
 
-            return (true, Enumerable.Empty<string>(), new TokenModel
-            {
-                AccessToken = newAccessToken,
-                RefreshToken = newRefreshToken,
-                User = new UserAuthInfo
+                if (principal == null)
+                    return (false, new[] { "Invalid access token." }, null);
+
+                var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (!int.TryParse(userIdClaim, out var userId))
+                    return (false, new[] { "Invalid token." }, null);
+
+                var user = await _unitOfWork.UserRepository.GetFirstOrDefaultAsync(
+                    u => u.Id == userId,
+                    includeProperties: "Role");
+
+                if (user == null)
+                    return (false, new[] { "User not found." }, null);
+
+                var cacheKey = $"refreshToken:{user.Email}";
+                var savedRefreshToken = await _cache.GetStringAsync(cacheKey);
+
+                if (savedRefreshToken != request.RefreshToken)
+                    return (false, new[] { "Invalid refresh token." }, null);
+
+                var newAccessToken = _tokenService.GenerateAccessToken(user);
+                var newRefreshToken = _tokenService.GenerateRefreshToken();
+
+                await _cache.SetStringAsync(cacheKey, newRefreshToken, new DistributedCacheEntryOptions
                 {
-                    Id = user.Id,
-                    Email = user.Email,
-                    FullName = user.FullName,
-                    Phone = user.Phone ?? string.Empty,
-                    RoleName = user.Role.RoleName.ToString(),
-                    IsActive = user.IsActive,
-                    MustChangePassword = user.MustChangePassword 
-                }
-            });
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7)
+                });
+
+                return (true, Enumerable.Empty<string>(), new TokenModel
+                {
+                    AccessToken = newAccessToken,
+                    RefreshToken = newRefreshToken,
+                    User = new UserAuthInfo
+                    {
+                        Id = user.Id,
+                        Email = user.Email,
+                        FullName = user.FullName,
+                        Phone = user.Phone ?? string.Empty,
+                        RoleName = user.Role.RoleName.ToString(),
+                        IsActive = user.IsActive,
+                        MustChangePassword = user.MustChangePassword 
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return (false, new[] { $"Refresh token failed: {ex.Message}" }, null);
+            }
         }
 
         public async Task<(bool Succeeded, bool NotFound, IEnumerable<string> Errors)> ForgotPasswordAsync(string email)
