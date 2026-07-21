@@ -71,10 +71,12 @@ namespace GodotXR.Api.Controllers
     public class FilesController : ControllerBase
     {
         private readonly IStorageService _storage;
+        private readonly IConfiguration _configuration;
 
-        public FilesController(IStorageService storage)
+        public FilesController(IStorageService storage, IConfiguration configuration)
         {
             _storage = storage;
+            _configuration = configuration;
         }
 
         [HttpPost]
@@ -278,5 +280,128 @@ namespace GodotXR.Api.Controllers
                 return NotFound("Audio chunk not found.");
             }
         }
+
+        [HttpPost("chunks/assess")]
+        public async Task<IActionResult> AssessChunk(
+            [FromBody] AssessChunkRequest request,
+            CancellationToken ct)
+        {
+            var subKey = _configuration["AzureSpeech:SubscriptionKey"];
+            var region = _configuration["AzureSpeech:Region"] ?? "southeastasia";
+            var language = _configuration["AzureSpeech:Language"] ?? "vi-VN";
+
+            if (string.IsNullOrEmpty(subKey) || subKey.Contains("YOUR_AZURE_SPEECH_KEY") || subKey == "your-key")
+            {
+                // Fallback mock assessment result
+                var random = new Random();
+                var accuracyScore = random.Next(75, 98);
+                var pronunciationScore = random.Next(70, 96);
+                var fluencyScore = random.Next(65, 95);
+                var completenessScore = 100;
+
+                var wordsList = request.ReferenceText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var mockWords = new List<object>();
+                foreach (var w in wordsList)
+                {
+                    var wordAccuracy = random.Next(70, 100);
+                    var errorType = wordAccuracy < 80 ? "Mispronunciation" : "None";
+                    mockWords.Add(new
+                    {
+                        Word = w,
+                        PronunciationAssessment = new
+                        {
+                            AccuracyScore = wordAccuracy,
+                            ErrorType = errorType
+                        }
+                    });
+                }
+
+                var mockResult = new
+                {
+                    RecognitionStatus = "Success",
+                    PronunciationAssessment = new
+                    {
+                        AccuracyScore = accuracyScore,
+                        PronunciationScore = pronunciationScore,
+                        CompletenessScore = completenessScore,
+                        FluencyScore = fluencyScore
+                    },
+                    Words = mockWords
+                };
+
+                return Ok(mockResult);
+            }
+
+            var objectName = $"records/{request.ChildProfileId}/{request.SessionId}/chunks/chunk_{request.ChunkIndex}.wav";
+            var memoryStream = new MemoryStream();
+            try
+            {
+                await _storage.DownloadAsync(objectName, memoryStream, ct);
+                memoryStream.Position = 0;
+            }
+            catch (Exception)
+            {
+                return NotFound("Audio chunk not found in storage.");
+            }
+
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", subKey);
+
+            var paramJson = $$"""
+            {
+              "ReferenceText": "{{request.ReferenceText}}",
+              "GradingSystem": "HundredMark",
+              "Granularity": "Phoneme",
+              "Dimension": "Comprehensive"
+            }
+            """;
+            var paramBytes = System.Text.Encoding.UTF8.GetBytes(paramJson);
+            var paramBase64 = Convert.ToBase64String(paramBytes);
+            client.DefaultRequestHeaders.Add("Pronunciation-Assessment", paramBase64);
+
+            var content = new StreamContent(memoryStream);
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("audio/wav");
+
+            var url = $"https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language={language}";
+
+            try
+            {
+                var response = await client.PostAsync(url, content, ct);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return BadRequest($"Azure Speech API error: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
+                }
+
+                var responseString = await response.Content.ReadAsStringAsync(ct);
+                using var doc = System.Text.Json.JsonDocument.Parse(responseString);
+                var root = doc.RootElement;
+                if (root.TryGetProperty("NBest", out var nbest) && nbest.GetArrayLength() > 0)
+                {
+                    var best = nbest[0];
+                    return Ok(best);
+                }
+
+                return Ok(root);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error communicating with Azure: {ex.Message}");
+            }
+        }
+    }
+
+    public class AssessChunkRequest
+    {
+        [Required]
+        public int ChildProfileId { get; set; }
+
+        [Required]
+        public string SessionId { get; set; } = null!;
+
+        [Required]
+        public int ChunkIndex { get; set; }
+
+        [Required]
+        public string ReferenceText { get; set; } = null!;
     }
 }

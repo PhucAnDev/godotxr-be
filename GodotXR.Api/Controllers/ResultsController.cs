@@ -1,4 +1,4 @@
-﻿using GodotXR.Api.Extensions;
+using GodotXR.Api.Extensions;
 using GodotXR.Application.DTOs.Request.Result;
 using GodotXR.Application.DTOs.Response;
 using GodotXR.Application.DTOs.Response.Result;
@@ -138,5 +138,20 @@ namespace GodotXR.Api.Controllers
                 Message = "Finalized results cannot be permanently deleted." 
             });
         }
+
+        [HttpPut("{id}/feedback")]
+        [Authorize(Roles = "Admin,Teacher")]
+        public async Task<IActionResult> UpdateFeedback(int id, [FromBody] UpdateFeedbackRequest request)
+        {
+            var result = await _resultService.UpdateFeedbackAsync(id, request.FeedbackText);
+            if (!result.Success)
+                return NotFound(result);
+            return Ok(result);
+        }
+    }
+
+    public class UpdateFeedbackRequest
+    {
+        public string FeedbackText { get; set; } = null!;
     }
 }

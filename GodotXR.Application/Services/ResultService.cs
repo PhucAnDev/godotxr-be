@@ -208,5 +208,24 @@ namespace GodotXR.Application.Services
                 Data = _mapper.Map<IEnumerable<ResultResponse>>(results)
             };
         }
+
+        public async Task<ApiResponse<ResultResponse>> UpdateFeedbackAsync(int id, string feedbackText)
+        {
+            var result = await _unitOfWork.ResultRepository.GetByIdAsync(id);
+            if (result == null)
+                return new ApiResponse<ResultResponse> { Success = false, Message = "Result not found." };
+
+            result.FeedbackText = feedbackText;
+            _unitOfWork.ResultRepository.Update(result);
+            await _unitOfWork.SaveChangesAsync();
+
+            var fullResult = await _unitOfWork.ResultRepository.GetWithDetailsAsync(id);
+            return new ApiResponse<ResultResponse>
+            {
+                Success = true,
+                Message = "Feedback updated successfully.",
+                Data = _mapper.Map<ResultResponse>(fullResult)
+            };
+        }
     }
 }
