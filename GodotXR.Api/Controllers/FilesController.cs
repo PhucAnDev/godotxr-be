@@ -23,6 +23,9 @@ namespace GodotXR.Api.Controllers
     public class UploadAudioChunkRequest
     {
         [Required]
+        public int ChildProfileId { get; set; }
+
+        [Required]
         public string SessionId { get; set; } = null!;
 
         [Required]
@@ -102,7 +105,7 @@ namespace GodotXR.Api.Controllers
                 return BadRequest("Audio file chunk is required.");
             }
 
-            var chunkObject = $"records/sessions/{request.SessionId}/chunks/chunk_{request.ChunkIndex}.wav";
+            var chunkObject = $"records/{request.ChildProfileId}/{request.SessionId}/chunks/chunk_{request.ChunkIndex}.wav";
 
             await using var chunkStream = request.AudioFile.OpenReadStream();
             await _storage.UploadAsync(chunkStream, chunkObject, "audio/wav", ct);
