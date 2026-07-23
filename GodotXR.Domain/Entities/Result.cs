@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GodotXR.Domain.Entities
 {
@@ -17,6 +17,10 @@ namespace GodotXR.Domain.Entities
         public string CompletionStatus { get; set; } = string.Empty;
 
         public float Score { get; set; }
+
+        public int ErrorCount { get; set; }
+
+        public int CorrectCount { get; set; }
 
         public DateTime? StartedAt { get; set; }
 

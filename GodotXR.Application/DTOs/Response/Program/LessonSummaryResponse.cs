@@ -1,4 +1,4 @@
-﻿namespace GodotXR.Application.DTOs.Response.Program
+namespace GodotXR.Application.DTOs.Response.Program
 {
     public class LessonSummaryResponse
     {
@@ -8,5 +8,6 @@
         public string? TargetSkill { get; set; }
         public int EstimatedDuration { get; set; }
         public string Status { get; set; } = string.Empty;
+        public float MaxScore { get; set; }
     }
 }

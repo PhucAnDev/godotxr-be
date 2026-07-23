@@ -1,4 +1,4 @@
-﻿namespace GodotXR.Application.DTOs.Request.Result
+namespace GodotXR.Application.DTOs.Request.Result
 {
     public sealed class SubmitResultRequest
     {
@@ -13,6 +13,10 @@
         public string CompletionStatus { get; set; } = null!; 
 
         public float Score { get; set; }
+
+        public int ErrorCount { get; set; }
+
+        public int CorrectCount { get; set; }
 
         public DateTime StartedAt { get; set; }
 

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using GodotXR.Application.DTOs.Request.Lesson;
 using GodotXR.Application.DTOs.Response;
 using GodotXR.Application.DTOs.Response.Lesson;
@@ -82,6 +82,7 @@ namespace GodotXR.Application.Services
                 TargetSkill = request.TargetSkill,
                 EstimatedDuration = request.EstimatedDuration,
                 Status = request.Status,
+                MaxScore = request.MaxScore,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -120,6 +121,7 @@ namespace GodotXR.Application.Services
             lesson.TargetSkill = request.TargetSkill;
             lesson.EstimatedDuration = request.EstimatedDuration;
             lesson.Status = request.Status;
+            lesson.MaxScore = request.MaxScore;
             lesson.UpdatedAt = DateTime.UtcNow;
 
             await _unitOfWork.SaveChangesAsync();

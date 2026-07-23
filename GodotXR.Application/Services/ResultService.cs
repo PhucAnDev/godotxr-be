@@ -115,6 +115,8 @@ namespace GodotXR.Application.Services
 
                 CompletionStatus = request.CompletionStatus,
                 Score = request.Score,
+                ErrorCount = request.ErrorCount,
+                CorrectCount = request.CorrectCount,
 
                 StartedAt = request.StartedAt,
                 CompletedAt = request.CompletedAt,

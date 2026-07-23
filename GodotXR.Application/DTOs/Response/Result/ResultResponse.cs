@@ -1,4 +1,4 @@
-﻿using GodotXR.Application.DTOs.Response.PronunciationDetail;
+using GodotXR.Application.DTOs.Response.PronunciationDetail;
 using GodotXR.Application.DTOs.Response.EventLog;
 
 namespace GodotXR.Application.DTOs.Response.Result
@@ -20,6 +20,10 @@ namespace GodotXR.Application.DTOs.Response.Result
         public string CompletionStatus { get; set; } = null!;
 
         public float Score { get; set; }
+
+        public int ErrorCount { get; set; }
+
+        public int CorrectCount { get; set; }
 
         public DateTime? StartedAt { get; set; }
 

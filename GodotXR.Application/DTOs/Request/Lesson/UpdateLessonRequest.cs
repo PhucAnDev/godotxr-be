@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace GodotXR.Application.DTOs.Request.Lesson
 {
@@ -20,5 +20,7 @@ namespace GodotXR.Application.DTOs.Request.Lesson
 
         [MaxLength(50)]
         public string Status { get; set; } = "Active";
+
+        public float MaxScore { get; set; } = 100f;
     }
 }
