@@ -79,7 +79,7 @@ namespace GodotXR.Api.Controllers
         }
 
         [HttpPut("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Teacher,Parent")]
         public async Task<ActionResult> Update(int id, [FromBody] UpdateUserRequest request)
         {
             if (id <= 0)
