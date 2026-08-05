@@ -59,7 +59,7 @@ namespace GodotXR.Api.Controllers
         }
 
         [HttpDelete("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> Delete(int id)
         {
             if (id <= 0) return BadRequest(new ApiResponse<bool> { Success = false, Message = "Invalid id." });
