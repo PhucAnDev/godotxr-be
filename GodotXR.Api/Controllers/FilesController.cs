@@ -373,15 +373,13 @@ namespace GodotXR.Api.Controllers
                 }
 
                 var responseString = await response.Content.ReadAsStringAsync(ct);
-                using var doc = System.Text.Json.JsonDocument.Parse(responseString);
-                var root = doc.RootElement;
-                if (root.TryGetProperty("NBest", out var nbest) && nbest.GetArrayLength() > 0)
+                var node = System.Text.Json.Nodes.JsonNode.Parse(responseString);
+                if (node != null && node["NBest"] is System.Text.Json.Nodes.JsonArray nbest && nbest.Count > 0)
                 {
-                    var best = nbest[0];
-                    return Ok(best);
+                    return Ok(nbest[0]);
                 }
 
-                return Ok(root);
+                return Ok(node);
             }
             catch (Exception ex)
             {
