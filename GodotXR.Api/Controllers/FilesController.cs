@@ -290,46 +290,9 @@ namespace GodotXR.Api.Controllers
             var region = _configuration["AzureSpeech:Region"] ?? "southeastasia";
             var language = _configuration["AzureSpeech:Language"] ?? "vi-VN";
 
-            if (string.IsNullOrEmpty(subKey) || subKey.Contains("YOUR_AZURE_SPEECH_KEY") || subKey == "your-key")
+            if (string.IsNullOrEmpty(subKey))
             {
-                // Fallback mock assessment result
-                var random = new Random();
-                var accuracyScore = random.Next(75, 98);
-                var pronunciationScore = random.Next(70, 96);
-                var fluencyScore = random.Next(65, 95);
-                var completenessScore = 100;
-
-                var wordsList = request.ReferenceText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                var mockWords = new List<object>();
-                foreach (var w in wordsList)
-                {
-                    var wordAccuracy = random.Next(70, 100);
-                    var errorType = wordAccuracy < 80 ? "Mispronunciation" : "None";
-                    mockWords.Add(new
-                    {
-                        Word = w,
-                        PronunciationAssessment = new
-                        {
-                            AccuracyScore = wordAccuracy,
-                            ErrorType = errorType
-                        }
-                    });
-                }
-
-                var mockResult = new
-                {
-                    RecognitionStatus = "Success",
-                    PronunciationAssessment = new
-                    {
-                        AccuracyScore = accuracyScore,
-                        PronunciationScore = pronunciationScore,
-                        CompletenessScore = completenessScore,
-                        FluencyScore = fluencyScore
-                    },
-                    Words = mockWords
-                };
-
-                return Ok(mockResult);
+                return BadRequest("Azure Speech Subscription Key is not configured on the server.");
             }
 
             var objectName = $"records/{request.ChildProfileId}/{request.SessionId}/chunks/chunk_{request.ChunkIndex}.wav";
