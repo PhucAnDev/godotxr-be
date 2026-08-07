@@ -67,7 +67,7 @@ namespace GodotXR.Api.Controllers
 
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Parent")]
+    [Authorize(Roles = "Admin,Teacher,Parent")]
     public class FilesController : ControllerBase
     {
         private readonly IStorageService _storage;
