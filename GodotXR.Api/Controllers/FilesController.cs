@@ -1,5 +1,6 @@
 using GodotXR.Application.DTOs.Response.FileUpload;
 using GodotXR.Application.Services;
+using GodotXR.Domain.IUnitOfWork;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
@@ -12,6 +13,8 @@ namespace GodotXR.Api.Controllers
 
         [Required]
         public int ChildProfileId { get; set; }
+
+        public string? SessionId { get; set; }  // Optional: links files to Result row in DB if sent
 
         [Required]
         public IFormFile Metadata { get; set; } = null!;
@@ -72,11 +75,13 @@ namespace GodotXR.Api.Controllers
     {
         private readonly IStorageService _storage;
         private readonly IConfiguration _configuration;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public FilesController(IStorageService storage, IConfiguration configuration)
+        public FilesController(IStorageService storage, IConfiguration configuration, IUnitOfWork unitOfWork)
         {
             _storage = storage;
             _configuration = configuration;
+            _unitOfWork = unitOfWork;
         }
 
         [HttpPost]
@@ -106,6 +111,21 @@ namespace GodotXR.Api.Controllers
             await using var audioStream = request.Audio.OpenReadStream();
 
             await _storage.UploadAsync(audioStream, audioObject, "audio/wav", ct);
+
+            // Link to Result table if SessionId is provided
+            if (!string.IsNullOrWhiteSpace(request.SessionId))
+            {
+                var result = await _unitOfWork.ResultRepository.GetBySessionIdAsync(request.SessionId);
+                if (result != null)
+                {
+                    var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
+                    result.AudioRecordUrl = $"{baseUrl}/api/files/{request.ChildProfileId}/{folderId}/DownloadAudio";
+                    result.ReplayDataUrl = $"{baseUrl}/api/files/{request.ChildProfileId}/{folderId}/DownloadMetadata";
+
+                    _unitOfWork.ResultRepository.Update(result);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+            }
 
             return Ok(new UploadFilesResponse(folderId));
         }
