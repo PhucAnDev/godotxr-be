@@ -88,7 +88,7 @@ namespace GodotXR.Infrastructure
 
             // JWT
             var jwtSettings = configuration.GetSection("Jwt");
-            var key = Encoding.ASCII.GetBytes(jwtSettings["Key"] ?? "SecretKeyMustBeAtLeast32CharactersLong");
+            var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? "SecretKeyMustBeAtLeast32CharactersLong");
 
             services.AddAuthentication(x =>
             {
