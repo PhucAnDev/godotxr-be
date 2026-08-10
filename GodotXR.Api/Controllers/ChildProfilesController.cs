@@ -1,4 +1,4 @@
-﻿using GodotXR.Api.Contracts;
+using GodotXR.Api.Contracts;
 using GodotXR.Api.Extensions;
 using GodotXR.Application.DTOs.Request.ChildProfile;
 using GodotXR.Application.DTOs.Response;
@@ -191,6 +191,26 @@ namespace GodotXR.Api.Controllers
                 Success = true,
                 Message = "OK",
                 Data = data
+            });
+        }
+
+        [HttpGet("my-students")]
+        [Authorize(Roles = "Teacher")]
+        [ProducesResponseType(
+            typeof(ApiResponse<PagedResponse<ChildProfileWithClassResponse>>),
+            StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetMyStudents([FromQuery] PaginationQuery query)
+        {
+            var teacherId = User.GetUserId();
+
+            var data = await _childProfileService
+                .GetStudentsByTeacherAsync(teacherId, query.PageNumber, query.PageSize);
+
+            return Ok(new ApiResponse<PagedResponse<ChildProfileWithClassResponse>>
+            {
+                Success = true,
+                Message = "OK",
+                Data    = data
             });
         }
     }

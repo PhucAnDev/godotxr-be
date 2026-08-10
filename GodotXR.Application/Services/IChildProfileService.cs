@@ -1,4 +1,4 @@
-﻿using GodotXR.Application.DTOs.Request.ChildProfile;
+using GodotXR.Application.DTOs.Request.ChildProfile;
 using GodotXR.Application.DTOs.Response;
 using GodotXR.Application.DTOs.Response.ChildProfile;
 
@@ -20,5 +20,11 @@ namespace GodotXR.Application.Services
             DeleteChildProfileAsync(int id);
 
         Task<IEnumerable<ChildProfileResponse>> GetChildProfilesByParentIdAsync(int parentId);
+
+        /// <summary>
+        /// Lấy danh sách học sinh (Active enrollment) trong lớp mà teacher quản lý.
+        /// </summary>
+        Task<PagedResponse<ChildProfileWithClassResponse>>
+            GetStudentsByTeacherAsync(int teacherId, int pageNumber, int pageSize);
     }
 }

@@ -192,5 +192,35 @@ namespace GodotXR.Application.Services
 
             return _mapper.Map<IEnumerable<ChildProfileResponse>>(childProfiles);
         }
+
+        public async Task<PagedResponse<ChildProfileWithClassResponse>>
+            GetStudentsByTeacherAsync(int teacherId, int pageNumber, int pageSize)
+        {
+            var (items, totalCount) = await _unitOfWork.ChildProfileRepository
+                .GetStudentsByTeacherIdAsync(teacherId, pageNumber, pageSize);
+
+            return new PagedResponse<ChildProfileWithClassResponse>
+            {
+                PageNumber = pageNumber,
+                PageSize   = pageSize,
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize),
+                Items = items.Select(dto => new ChildProfileWithClassResponse
+                {
+                    Id               = dto.Child.Id,
+                    FullName         = dto.Child.FullName,
+                    Age              = dto.Child.Age,
+                    Gender           = dto.Child.Gender,
+                    LearningLevel    = dto.Child.LearningLevel,
+                    Status           = dto.Child.Status,
+                    Avatar           = dto.Child.Avatar,
+                    Note             = dto.Child.Note,
+                    CreatedAt        = dto.Child.CreatedAt,
+                    ClassroomId      = dto.ClassroomId,
+                    ClassroomName    = dto.ClassroomName,
+                    EnrollmentStatus = dto.EnrollmentStatus,
+                }).ToList()
+            };
+        }
     }
 }
