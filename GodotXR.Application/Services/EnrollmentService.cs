@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using GodotXR.Application.DTOs.Request.Enrollment;
 using GodotXR.Application.DTOs.Response;
 using GodotXR.Application.DTOs.Response.Enrollment;
@@ -136,6 +136,11 @@ namespace GodotXR.Application.Services
             if (classroom is null)
             {
                 errors.Add("Lớp học không tồn tại.");
+                return (false, false, errors, null);
+            }
+            if (classroom.Status != "Active" && (entity.ClassId != request.ClassId || request.Status == "Active" || request.Status == "Pending"))
+            {
+                errors.Add("Lớp học không đang hoạt động.");
                 return (false, false, errors, null);
             }
             if (requesterRole == "Teacher" && classroom.UserId != requesterId)
