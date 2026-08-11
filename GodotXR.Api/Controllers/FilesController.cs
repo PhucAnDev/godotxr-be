@@ -3,7 +3,6 @@ using GodotXR.Application.Services;
 using GodotXR.Domain.IUnitOfWork;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Swashbuckle.AspNetCore.Annotations;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 
@@ -181,7 +180,6 @@ namespace GodotXR.Api.Controllers
 
 
         [HttpGet("{childProfileId}")]
-        [SwaggerOperation(Summary = "Lấy tất cả file của một child", Description = "Trả về danh sách các session (metadata + audio) đã upload cho childProfileId")]
         public async Task<ActionResult<IEnumerable<FileGroupResponse>>> GetByChildProfile(
             int childProfileId,
             CancellationToken ct)
@@ -217,7 +215,6 @@ namespace GodotXR.Api.Controllers
         }
 
         [HttpGet("{childProfileId}/{sessionId}")]
-        [SwaggerOperation(Summary = "Lấy file theo sessionId", Description = "Trả về URL metadata.json và voice.wav của một session cụ thể")]
         public async Task<ActionResult<FileGroupResponse>> GetById(
             int childProfileId,
             string sessionId,
@@ -241,7 +238,6 @@ namespace GodotXR.Api.Controllers
         }
 
         [HttpGet("{childProfileId}/{sessionId}/DownloadMetadata")]
-        [SwaggerOperation(Summary = "Tải xuống file metadata (replay JSON)", Description = "Download trực tiếp file metadata.json của session")]
         public async Task<IActionResult> DownloadMetadata(
             int childProfileId,
             string sessionId,
@@ -262,7 +258,6 @@ namespace GodotXR.Api.Controllers
         }
 
         [HttpGet("{childProfileId}/{sessionId}/DownloadAudio")]
-        [SwaggerOperation(Summary = "Tải xuống file âm thanh (WAV)", Description = "Download trực tiếp file voice.wav của session")]
         public async Task<IActionResult> DownloadAudio(
             int childProfileId,
             string sessionId,

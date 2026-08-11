@@ -52,9 +52,6 @@ namespace GodotXR.Api
                         new string[] {}
                     }
                 });
-
-                // Enable [SwaggerOperation] annotations on controllers
-                options.EnableAnnotations();
             });
 
             return services;
