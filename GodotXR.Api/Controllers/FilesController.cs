@@ -3,6 +3,7 @@ using GodotXR.Application.Services;
 using GodotXR.Domain.IUnitOfWork;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 
@@ -14,7 +15,9 @@ namespace GodotXR.Api.Controllers
         [Required]
         public int ChildProfileId { get; set; }
 
-        public string? SessionId { get; set; }  // Optional: links files to Result row in DB if sent
+        [Required]
+        [FromForm(Name = "childSessionId")]
+        public string SessionId { get; set; } = null!;  // Maps to VR client form field 'childSessionId'
 
         [Required]
         public IFormFile Metadata { get; set; } = null!;
@@ -99,10 +102,11 @@ namespace GodotXR.Api.Controllers
                 return BadRequest("Audio file is required.");
             }
 
-            var folderId = Guid.NewGuid();
+            // Use the SessionId from the VR app as the folder path for consistent linking
+            var sessionId = request.SessionId;
 
-            var metadataObject = $"records/{request.ChildProfileId}/{folderId}/metadata.json";
-            var audioObject = $"records/{request.ChildProfileId}/{folderId}/voice.wav";
+            var metadataObject = $"records/{request.ChildProfileId}/{sessionId}/metadata.json";
+            var audioObject = $"records/{request.ChildProfileId}/{sessionId}/voice.wav";
 
             await using var metadataStream = request.Metadata.OpenReadStream();
 
@@ -112,22 +116,19 @@ namespace GodotXR.Api.Controllers
 
             await _storage.UploadAsync(audioStream, audioObject, "audio/wav", ct);
 
-            // Link to Result table if SessionId is provided
-            if (!string.IsNullOrWhiteSpace(request.SessionId))
+            // Link URLs back to the Result row using the same SessionId
+            var dbResult = await _unitOfWork.ResultRepository.GetBySessionIdAsync(sessionId);
+            if (dbResult != null)
             {
-                var result = await _unitOfWork.ResultRepository.GetBySessionIdAsync(request.SessionId);
-                if (result != null)
-                {
-                    var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
-                    result.AudioRecordUrl = $"{baseUrl}/api/files/{request.ChildProfileId}/{folderId}/DownloadAudio";
-                    result.ReplayDataUrl = $"{baseUrl}/api/files/{request.ChildProfileId}/{folderId}/DownloadMetadata";
+                var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
+                dbResult.AudioRecordUrl = $"{baseUrl}/api/files/{request.ChildProfileId}/{sessionId}/DownloadAudio";
+                dbResult.ReplayDataUrl = $"{baseUrl}/api/files/{request.ChildProfileId}/{sessionId}/DownloadMetadata";
 
-                    _unitOfWork.ResultRepository.Update(result);
-                    await _unitOfWork.SaveChangesAsync();
-                }
+                _unitOfWork.ResultRepository.Update(dbResult);
+                await _unitOfWork.SaveChangesAsync();
             }
 
-            return Ok(new UploadFilesResponse(folderId));
+            return Ok(new UploadFilesResponse(sessionId));
         }
 
         [HttpPost("chunks")]
@@ -180,6 +181,7 @@ namespace GodotXR.Api.Controllers
 
 
         [HttpGet("{childProfileId}")]
+        [SwaggerOperation(Summary = "Lấy tất cả file của một child", Description = "Trả về danh sách các session (metadata + audio) đã upload cho childProfileId")]
         public async Task<ActionResult<IEnumerable<FileGroupResponse>>> GetByChildProfile(
             int childProfileId,
             CancellationToken ct)
@@ -187,43 +189,41 @@ namespace GodotXR.Api.Controllers
             var prefix = $"records/{childProfileId}/";
             var keys = await _storage.ListObjectsAsync(prefix, ct);
 
-            var folderIds = keys
+            // Extract unique sessionIds from object paths: records/{childId}/{sessionId}/...
+            var sessionIds = keys
                 .Select(key =>
                 {
                     var parts = key.Split('/');
-                    if (parts.Length >= 4 && Guid.TryParse(parts[2], out var folderId))
-                    {
-                        return (Guid?)folderId;
-                    }
-                    return null;
+                    // parts[0]=records, parts[1]=childId, parts[2]=sessionId
+                    return parts.Length >= 4 ? parts[2] : null;
                 })
-                .Where(id => id.HasValue)
-                .Select(id => id!.Value)
+                .Where(id => !string.IsNullOrEmpty(id))
                 .Distinct()
                 .ToList();
 
             var result = new List<FileGroupResponse>();
-            foreach (var folderId in folderIds)
+            foreach (var sid in sessionIds)
             {
-                var metadataObject = $"records/{childProfileId}/{folderId}/metadata.json";
-                var audioObject = $"records/{childProfileId}/{folderId}/voice.wav";
+                var metadataObject = $"records/{childProfileId}/{sid}/metadata.json";
+                var audioObject = $"records/{childProfileId}/{sid}/voice.wav";
 
                 var metadataUrl = await _storage.GetPresignedUrlAsync(metadataObject, 3600, ct);
                 var audioUrl = await _storage.GetPresignedUrlAsync(audioObject, 3600, ct);
 
-                result.Add(new FileGroupResponse(folderId, metadataUrl, audioUrl));
+                result.Add(new FileGroupResponse(sid, metadataUrl, audioUrl));
             }
 
             return Ok(result);
         }
 
-        [HttpGet("{childProfileId}/{folderId}")]
+        [HttpGet("{childProfileId}/{sessionId}")]
+        [SwaggerOperation(Summary = "Lấy file theo sessionId", Description = "Trả về URL metadata.json và voice.wav của một session cụ thể")]
         public async Task<ActionResult<FileGroupResponse>> GetById(
             int childProfileId,
-            Guid folderId,
+            string sessionId,
             CancellationToken ct)
         {
-            var prefix = $"records/{childProfileId}/{folderId}/";
+            var prefix = $"records/{childProfileId}/{sessionId}/";
             var keys = await _storage.ListObjectsAsync(prefix, ct);
 
             if (!keys.Any())
@@ -231,22 +231,23 @@ namespace GodotXR.Api.Controllers
                 return NotFound("The specified files do not exist.");
             }
 
-            var metadataObject = $"records/{childProfileId}/{folderId}/metadata.json";
-            var audioObject = $"records/{childProfileId}/{folderId}/voice.wav";
+            var metadataObject = $"records/{childProfileId}/{sessionId}/metadata.json";
+            var audioObject = $"records/{childProfileId}/{sessionId}/voice.wav";
 
             var metadataUrl = await _storage.GetPresignedUrlAsync(metadataObject, 3600, ct);
             var audioUrl = await _storage.GetPresignedUrlAsync(audioObject, 3600, ct);
 
-            return Ok(new FileGroupResponse(folderId, metadataUrl, audioUrl));
+            return Ok(new FileGroupResponse(sessionId, metadataUrl, audioUrl));
         }
 
-        [HttpGet("{childProfileId}/{folderId}/DownloadMetadata")]
+        [HttpGet("{childProfileId}/{sessionId}/DownloadMetadata")]
+        [SwaggerOperation(Summary = "Tải xuống file metadata (replay JSON)", Description = "Download trực tiếp file metadata.json của session")]
         public async Task<IActionResult> DownloadMetadata(
             int childProfileId,
-            Guid folderId,
+            string sessionId,
             CancellationToken ct)
         {
-            var objectName = $"records/{childProfileId}/{folderId}/metadata.json";
+            var objectName = $"records/{childProfileId}/{sessionId}/metadata.json";
             var memoryStream = new MemoryStream();
             try
             {
@@ -260,13 +261,14 @@ namespace GodotXR.Api.Controllers
             }
         }
 
-        [HttpGet("{childProfileId}/{folderId}/DownloadAudio")]
+        [HttpGet("{childProfileId}/{sessionId}/DownloadAudio")]
+        [SwaggerOperation(Summary = "Tải xuống file âm thanh (WAV)", Description = "Download trực tiếp file voice.wav của session")]
         public async Task<IActionResult> DownloadAudio(
             int childProfileId,
-            Guid folderId,
+            string sessionId,
             CancellationToken ct)
         {
-            var objectName = $"records/{childProfileId}/{folderId}/voice.wav";
+            var objectName = $"records/{childProfileId}/{sessionId}/voice.wav";
             var memoryStream = new MemoryStream();
             try
             {

@@ -1,4 +1,4 @@
-﻿using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Models;
 
 namespace GodotXR.Api
 {
@@ -52,6 +52,9 @@ namespace GodotXR.Api
                         new string[] {}
                     }
                 });
+
+                // Enable [SwaggerOperation] annotations on controllers
+                options.EnableAnnotations();
             });
 
             return services;
