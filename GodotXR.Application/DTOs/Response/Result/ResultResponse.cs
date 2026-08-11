@@ -15,6 +15,10 @@ namespace GodotXR.Application.DTOs.Response.Result
 
         public int? LessonId { get; set; }
 
+        public string? LessonName { get; set; }
+
+        public string? ExerciseName { get; set; }
+
         public int AttemptNumber { get; set; }
 
         public string CompletionStatus { get; set; } = null!;

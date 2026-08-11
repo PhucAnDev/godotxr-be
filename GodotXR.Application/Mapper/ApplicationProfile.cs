@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using GodotXR.Application.DTOs.Request.Analyze;
 using GodotXR.Application.DTOs.Request.ChildProfile;
 using GodotXR.Application.DTOs.Response.Analyze;
@@ -100,6 +100,8 @@ namespace GodotXR.Application.Mapper
                 .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Classroom.ClassName));
 
             CreateMap<Result, ResultResponse>()
+                .ForMember(d => d.LessonName, o => o.MapFrom(s => s.Lesson != null ? s.Lesson.LessonName : null))
+                .ForMember(d => d.ExerciseName, o => o.MapFrom(s => s.Exercise != null ? s.Exercise.ExerciseName : null))
                 .ForMember(d => d.PronunciationDetails, o => o.MapFrom(s => s.PronunciationDetails))
                 .ForMember(d => d.EventLogs, o => o.MapFrom(s => s.EventLogs));
 
