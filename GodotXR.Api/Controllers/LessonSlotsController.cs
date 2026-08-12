@@ -101,7 +101,7 @@ namespace GodotXR.Api.Controllers
 
         #region LessonSlots
 
-        [HttpGet("api/lessons/{lessonId:int}/slots")]
+        [HttpGet("api/lesson-slots/{lessonId:int}")]
         [Authorize(Roles = "Admin,Teacher")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<LessonSlotResponse>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetSlots(int lessonId)
@@ -115,7 +115,7 @@ namespace GodotXR.Api.Controllers
             });
         }
 
-        [HttpPost("api/lessons/{lessonId:int}/slots")]
+        [HttpPost("api/lesson-slots/{lessonId:int}")]
         [Authorize(Roles = "Admin,Teacher")]
         [ProducesResponseType(typeof(ApiResponse<LessonSlotResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> ConfigureSlot(int lessonId, [FromBody] ConfigureSlotRequest request)
@@ -146,7 +146,7 @@ namespace GodotXR.Api.Controllers
             }
         }
 
-        [HttpPut("api/lessons/{lessonId:int}/slots/{id:int}/assign")]
+        [HttpPut("api/lesson-slots/{lessonId:int}/{id:int}/assign")]
         [Authorize(Roles = "Admin,Teacher")]
         [ProducesResponseType(typeof(ApiResponse<LessonSlotResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> AssignItemToSlot(int lessonId, int id, [FromBody] AssignItemAssetRequest request)
