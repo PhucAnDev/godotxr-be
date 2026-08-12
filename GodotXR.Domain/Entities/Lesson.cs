@@ -25,7 +25,9 @@ namespace GodotXR.Domain.Entities
 
         public Program Program { get; set; } = null!;
 
-        public ICollection<Exercise> Exercises { get; set; } = new List<Exercise>();
+        public ICollection<LessonImage> LessonImages { get; set; } = new List<LessonImage>();
+
+        public ICollection<LessonSlot> LessonSlots { get; set; } = new List<LessonSlot>();
 
         public ICollection<Result> Results { get; set; } = new List<Result>();
     }

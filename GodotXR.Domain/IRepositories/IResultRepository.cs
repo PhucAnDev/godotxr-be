@@ -1,4 +1,4 @@
-﻿using GodotXR.Domain.Entities;
+using GodotXR.Domain.Entities;
 
 namespace GodotXR.Domain.IRepositories
 {
@@ -6,12 +6,10 @@ namespace GodotXR.Domain.IRepositories
     {
         Task<Result?> GetBySessionIdAsync(string sessionId);
 
-        Task<int> GetAttemptCountAsync(int childId, int? lessonId, int? exerciseId);
+        Task<int> GetAttemptCountAsync(int childId, int? lessonId);
 
         Task<Result?> GetWithDetailsAsync(int id);
 
         Task<IEnumerable<Result>> GetByChildIdAsync(int childId);
-
-        Task<IEnumerable<Result>> GetByExerciseIdAsync(int exerciseId);
     }
 }

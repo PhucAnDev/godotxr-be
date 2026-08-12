@@ -1,4 +1,4 @@
-﻿using GodotXR.Domain.IRepositories;
+using GodotXR.Domain.IRepositories;
 
 namespace GodotXR.Domain.IUnitOfWork
 {
@@ -22,11 +22,7 @@ namespace GodotXR.Domain.IUnitOfWork
 
         IEnrollmentRepository EnrollmentRepository { get; }
 
-        IExerciseTypeRepository ExerciseTypeRepository { get; }
 
-        IExerciseRepository ExerciseRepository { get; }
-
-        IExerciseQuestionRepository ExerciseQuestionRepository { get; }
 
         IResultRepository ResultRepository { get; }
 

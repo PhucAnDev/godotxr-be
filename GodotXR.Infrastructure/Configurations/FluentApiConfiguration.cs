@@ -1,4 +1,4 @@
-﻿using GodotXR.Domain.Entities;
+using GodotXR.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GodotXR.Infrastructure.Configurations
@@ -95,41 +95,35 @@ namespace GodotXR.Infrastructure.Configurations
             modelBuilder.Entity<Enrollment>().HasQueryFilter(e => !e.IsDeleted);
 
             // =========================================================
-            // BÀI TẬP (ExerciseType - Exercise - ExerciseQuestion)
+            // DYNAMIC VR CONFIGURATION (ItemAsset - LessonImage - LessonSlot)
             // =========================================================
-            modelBuilder.Entity<Exercise>()
-                .HasOne(e => e.Teacher)
-                .WithMany(u => u.Exercises)
-                .HasForeignKey(e => e.TeacherId)
+            modelBuilder.Entity<LessonImage>()
+                .HasOne(li => li.Lesson)
+                .WithMany(l => l.LessonImages)
+                .HasForeignKey(li => li.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<LessonSlot>()
+                .HasOne(ls => ls.Lesson)
+                .WithMany(l => l.LessonSlots)
+                .HasForeignKey(ls => ls.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<LessonSlot>()
+                .HasOne(ls => ls.LessonImage)
+                .WithMany(li => li.LessonSlots)
+                .HasForeignKey(ls => ls.LessonImageId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<LessonSlot>()
+                .HasOne(ls => ls.ItemAsset)
+                .WithMany(ia => ia.LessonSlots)
+                .HasForeignKey(ls => ls.ItemAssetId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Exercise>()
-                .HasOne(e => e.Lesson)
-                .WithMany(l => l.Exercises)
-                .HasForeignKey(e => e.LessonId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Exercise>()
-                .HasOne(e => e.ExerciseType)
-                .WithMany(et => et.Exercises)
-                .HasForeignKey(e => e.TypeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<ExerciseQuestion>()
-                .HasOne(eq => eq.Exercise)
-                .WithMany(e => e.ExerciseQuestions)
-                .HasForeignKey(eq => eq.ExerciseId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<ExerciseQuestion>()
-                .HasOne(eq => eq.Teacher)
-                .WithMany(u => u.ExerciseQuestions)
-                .HasForeignKey(eq => eq.TeacherId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<ExerciseType>().HasQueryFilter(et => !et.IsDeleted);
-            modelBuilder.Entity<Exercise>().HasQueryFilter(e => !e.IsDeleted);
-            modelBuilder.Entity<ExerciseQuestion>().HasQueryFilter(eq => !eq.IsDeleted);
+            modelBuilder.Entity<ItemAsset>().HasQueryFilter(ia => !ia.IsDeleted);
+            modelBuilder.Entity<LessonImage>().HasQueryFilter(li => !li.IsDeleted);
+            modelBuilder.Entity<LessonSlot>().HasQueryFilter(ls => !ls.IsDeleted);
 
             // =========================================================
             // KẾT QUẢ LUYỆN TẬP (Result - PronunciationDetail - EventLog)
@@ -138,12 +132,6 @@ namespace GodotXR.Infrastructure.Configurations
                 .HasOne(r => r.Child)
                 .WithMany(cp => cp.Results)
                 .HasForeignKey(r => r.ChildId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Result>()
-                .HasOne(r => r.Exercise)
-                .WithMany(e => e.Results)
-                .HasForeignKey(r => r.ExerciseId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Result>()

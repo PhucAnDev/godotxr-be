@@ -6,9 +6,9 @@ using GodotXR.Application.DTOs.Response.ChildProfile;
 using GodotXR.Application.DTOs.Response.Classroom;
 using GodotXR.Application.DTOs.Response.Enrollment;
 using GodotXR.Application.DTOs.Response.EventLog;
-using GodotXR.Application.DTOs.Response.Exercise;
-using GodotXR.Application.DTOs.Response.ExerciseQuestion;
-using GodotXR.Application.DTOs.Response.ExerciseType;
+using GodotXR.Application.DTOs.Response.ItemAsset;
+using GodotXR.Application.DTOs.Response.LessonImage;
+using GodotXR.Application.DTOs.Response.LessonSlot;
 using GodotXR.Application.DTOs.Response.Lesson;
 using GodotXR.Application.DTOs.Response.Program;
 using GodotXR.Application.DTOs.Response.PronunciationDetail;
@@ -72,27 +72,15 @@ namespace GodotXR.Application.Mapper
                 .ForMember(dest => dest.EnrollmentCount, opt => opt.MapFrom(src =>
                     src.Enrollments.Count(e => !e.IsDeleted)));
 
-            CreateMap<Exercise, ExerciseResponse>()
-                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src =>
-                    src.Teacher != null ? src.Teacher.FullName : string.Empty))
-                .ForMember(dest => dest.LessonName, opt => opt.MapFrom(src =>
-                    src.Lesson != null ? src.Lesson.LessonName : string.Empty))
-                .ForMember(dest => dest.TypeName, opt => opt.MapFrom(src =>
-                    src.ExerciseType != null ? src.ExerciseType.TypeName : string.Empty))
-                .ForMember(dest => dest.QuestionCount, opt => opt.MapFrom(src =>
-                    src.ExerciseQuestions.Count(q => !q.IsDeleted)));
-
-            CreateMap<ExerciseQuestion, ExerciseQuestionResponse>()
-                .ForMember(dest => dest.ExerciseName, opt => opt.MapFrom(src =>
-                    src.Exercise != null ? src.Exercise.ExerciseName : string.Empty))
-                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src =>
-                    src.Teacher != null ? src.Teacher.FullName : string.Empty));
+            CreateMap<ItemAsset, ItemAssetResponse>();
+            CreateMap<LessonImage, LessonImageResponse>();
+            CreateMap<LessonSlot, LessonSlotResponse>();
 
             CreateMap<CreateChildProfileRequest, ChildProfile>();
 
             CreateMap<ChildProfile, ChildProfileResponse>();
 
-            CreateMap<ExerciseType, ExerciseTypeResponse>();
+
 
             CreateMap<Enrollment, EnrollmentResponse>()
                 .ForMember(dest => dest.ChildFullName, opt => opt.MapFrom(src => src.Child.FullName))
@@ -101,7 +89,6 @@ namespace GodotXR.Application.Mapper
 
             CreateMap<Result, ResultResponse>()
                 .ForMember(d => d.LessonName, o => o.MapFrom(s => s.Lesson != null ? s.Lesson.LessonName : null))
-                .ForMember(d => d.ExerciseName, o => o.MapFrom(s => s.Exercise != null ? s.Exercise.ExerciseName : null))
                 .ForMember(d => d.PronunciationDetails, o => o.MapFrom(s => s.PronunciationDetails))
                 .ForMember(d => d.EventLogs, o => o.MapFrom(s => s.EventLogs));
 

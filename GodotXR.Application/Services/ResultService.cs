@@ -30,9 +30,7 @@ namespace GodotXR.Application.Services
             if (errors.Any())
                 return (false, false, errors, null);
 
-            var resultType = request.ExerciseId.HasValue
-                ? ResultType.Exercise
-                : ResultType.Lesson;
+            var resultType = ResultType.Lesson;
 
             // BR-80: idempotent — cùng SessionId không tạo duplicate
             var existing = await _unitOfWork.ResultRepository.GetBySessionIdAsync(request.SessionId);
@@ -51,21 +49,14 @@ namespace GodotXR.Application.Services
             if (!enrollments.Any(e => e.Status == "Active" && !e.IsDeleted))
                 errors.Add("Trẻ chưa có hồ sơ ghi danh hoạt động tại bất kỳ lớp nào.");
 
-            // BR-84: Exercise phải tồn tại
-            if (resultType == ResultType.Exercise)
+            // BR-84: Lesson phải tồn tại
+            if (!request.LessonId.HasValue)
             {
-                var exercise = await _unitOfWork.ExerciseRepository.GetByIdAsync(request.ExerciseId!.Value);
-
-                if (exercise == null)
-                    return (false, true, new[] { "Không tìm thấy bài tập." }, null);
-
-                // BR-74: Exercise phải active
-                if (exercise.Status != "Active")
-                    errors.Add("Bài tập không ở trạng thái Hoạt động.");
+                errors.Add("Thiếu mã bài học (LessonId).");
             }
             else
             {
-                var lesson = await _unitOfWork.LessonRepository.GetByIdAsync(request.LessonId!.Value);
+                var lesson = await _unitOfWork.LessonRepository.GetByIdAsync(request.LessonId.Value);
 
                 if (lesson == null)
                     return (false, true, new[] { "Không tìm thấy bài học." }, null);
@@ -98,7 +89,7 @@ namespace GodotXR.Application.Services
                 return (false, false, errors, null);
 
             // BR-78: AttemptNumber tự tăng
-            var attemptCount = await _unitOfWork.ResultRepository.GetAttemptCountAsync(request.ChildId, request.ExerciseId, request.LessonId);
+            var attemptCount = await _unitOfWork.ResultRepository.GetAttemptCountAsync(request.ChildId, request.LessonId);
 
             var result = new Result
             {
@@ -109,7 +100,6 @@ namespace GodotXR.Application.Services
                 ResultType = resultType,
 
                 LessonId = request.LessonId,
-                ExerciseId = request.ExerciseId,
 
                 AttemptNumber = attemptCount + 1,
 
@@ -196,20 +186,7 @@ namespace GodotXR.Application.Services
             };
         }
 
-        public async Task<ApiResponse<IEnumerable<ResultResponse>>> GetByExerciseIdAsync(int exerciseId)
-        {
-            var exercise = await _unitOfWork.ExerciseRepository.GetByIdAsync(exerciseId);
-            if (exercise == null)
-                return new ApiResponse<IEnumerable<ResultResponse>> { Success = false, Message = "Exercise not found." };
 
-            var results = await _unitOfWork.ResultRepository.GetByExerciseIdAsync(exerciseId);
-            return new ApiResponse<IEnumerable<ResultResponse>>
-            {
-                Success = true,
-                Message = "Success.",
-                Data = _mapper.Map<IEnumerable<ResultResponse>>(results)
-            };
-        }
 
         public async Task<ApiResponse<ResultResponse>> UpdateFeedbackAsync(int id, string feedbackText)
         {

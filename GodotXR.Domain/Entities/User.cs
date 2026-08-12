@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 namespace GodotXR.Domain.Entities
 {
@@ -37,8 +37,6 @@ namespace GodotXR.Domain.Entities
         public virtual ICollection<ChildProfile> ChildProfiles { get; set; } = new List<ChildProfile>();
         public virtual ICollection<Classroom> Classrooms { get; set; } = new List<Classroom>();
         public virtual ICollection<Semester> Semesters { get; set; } = new List<Semester>();
-        public virtual ICollection<Exercise> Exercises { get; set; } = new List<Exercise>();
-        public virtual ICollection<ExerciseQuestion> ExerciseQuestions { get; set; } = new List<ExerciseQuestion>();
         public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
     }
 }

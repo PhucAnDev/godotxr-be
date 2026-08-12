@@ -1,4 +1,4 @@
-﻿using GodotXR.Domain.IRepositories;
+using GodotXR.Domain.IRepositories;
 using GodotXR.Domain.IUnitOfWork;
 using GodotXR.Infrastructure.Data;
 using GodotXR.Infrastructure.Repositories;
@@ -20,9 +20,7 @@ namespace GodotXR.Infrastructure.UnitOfWork
         private IClassroomRepository? _classroomRepository;
         private IChildProfileRepository? _childProfileRepository;
         private IEnrollmentRepository? _enrollmentRepository;
-        private IExerciseTypeRepository? _exerciseTypeRepository;
-        private IExerciseRepository? _exerciseRepository;
-        private IExerciseQuestionRepository? _exerciseQuestionRepository;
+
         private IResultRepository? _resultRepository;
         private IPronunciationDetailRepository? _pronunciationDetailRepository;
         private IEventLogRepository? _eventLogRepository;
@@ -103,32 +101,7 @@ namespace GodotXR.Infrastructure.UnitOfWork
             }
         }
 
-        public IExerciseTypeRepository ExerciseTypeRepository
-        {
-            get 
-            { 
-                _exerciseTypeRepository ??= new ExerciseTypeRepository(_context); 
-                return _exerciseTypeRepository; 
-            }
-        }
 
-        public IExerciseRepository ExerciseRepository
-        {
-            get 
-            { 
-                _exerciseRepository ??= new ExerciseRepository(_context); 
-                return _exerciseRepository; 
-            }
-        }
-
-        public IExerciseQuestionRepository ExerciseQuestionRepository
-        {
-            get 
-            { 
-                _exerciseQuestionRepository ??= new ExerciseQuestionRepository(_context); 
-                return _exerciseQuestionRepository; 
-            }
-        }
 
         public IResultRepository ResultRepository
         {

@@ -1,4 +1,4 @@
-﻿using GodotXR.Domain.Entities;
+using GodotXR.Domain.Entities;
 using GodotXR.Infrastructure.Configurations;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,11 +29,9 @@ namespace GodotXR.Infrastructure.Data
 
         public DbSet<Enrollment> Enrollments { get; set; }
 
-        public DbSet<ExerciseType> ExerciseTypes { get; set; }
-
-        public DbSet<Exercise> Exercises { get; set; }
-
-        public DbSet<ExerciseQuestion> ExerciseQuestions { get; set; }
+        public DbSet<ItemAsset> ItemAssets { get; set; }
+        public DbSet<LessonImage> LessonImages { get; set; }
+        public DbSet<LessonSlot> LessonSlots { get; set; }
 
         public DbSet<Result> Results { get; set; }
 

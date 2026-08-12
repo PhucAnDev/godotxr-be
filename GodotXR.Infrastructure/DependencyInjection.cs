@@ -66,9 +66,8 @@ namespace GodotXR.Infrastructure
             services.AddScoped<IClassroomService, ClassroomService>();
             services.AddScoped<IChildProfileService, ChildProfileService>();
             services.AddScoped<IEnrollmentService, EnrollmentService>();
-            services.AddScoped<IExerciseTypeService, ExerciseTypeService>();
-            services.AddScoped<IExerciseService, ExerciseService>();
-            services.AddScoped<IExerciseQuestionService, ExerciseQuestionService>();
+            services.AddScoped<IItemAssetService, ItemAssetService>();
+            services.AddScoped<ILessonSlotService, LessonSlotService>();
             services.AddScoped<IResultService, ResultService>();
             services.AddScoped<IAnalyzeService, AnalyzeService>();
             services.AddScoped<IReportService, ReportService>();

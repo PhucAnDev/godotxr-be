@@ -1,5 +1,6 @@
 using GodotXR.Application.DTOs.Response.FileUpload;
 using GodotXR.Application.Services;
+using GodotXR.Domain.Entities;
 using GodotXR.Domain.IUnitOfWork;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -365,6 +366,117 @@ namespace GodotXR.Api.Controllers
             {
                 return StatusCode(500, $"Error communicating with Azure: {ex.Message}");
             }
+        }
+
+        [HttpGet("assets/{assetId:int}/model")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DownloadAssetModel(int assetId, CancellationToken ct)
+        {
+            var asset = await _unitOfWork.Repository<ItemAsset>().GetByIdAsync(assetId);
+            if (asset == null || asset.IsDeleted || string.IsNullOrEmpty(asset.ModelUrl))
+            {
+                return NotFound("Model asset not found.");
+            }
+
+            var memoryStream = new MemoryStream();
+            try
+            {
+                await _storage.DownloadAsync(asset.ModelUrl, memoryStream, ct);
+                memoryStream.Position = 0;
+                var fileName = Path.GetFileName(asset.ModelUrl) ?? "model.glb";
+                return File(memoryStream, "application/octet-stream", fileName);
+            }
+            catch (Exception)
+            {
+                return NotFound("Model file not found in storage.");
+            }
+        }
+
+        [HttpGet("assets/{assetId:int}/image")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DownloadAssetImage(int assetId, CancellationToken ct)
+        {
+            var asset = await _unitOfWork.Repository<ItemAsset>().GetByIdAsync(assetId);
+            if (asset == null || asset.IsDeleted || string.IsNullOrEmpty(asset.ImageUrl))
+            {
+                return NotFound("Image asset not found.");
+            }
+
+            var memoryStream = new MemoryStream();
+            try
+            {
+                await _storage.DownloadAsync(asset.ImageUrl, memoryStream, ct);
+                memoryStream.Position = 0;
+                var contentType = GetContentType(asset.ImageUrl);
+                return File(memoryStream, contentType);
+            }
+            catch (Exception)
+            {
+                return NotFound("Image file not found in storage.");
+            }
+        }
+
+        [HttpGet("assets/{assetId:int}/audio")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DownloadAssetAudio(int assetId, CancellationToken ct)
+        {
+            var asset = await _unitOfWork.Repository<ItemAsset>().GetByIdAsync(assetId);
+            if (asset == null || asset.IsDeleted || string.IsNullOrEmpty(asset.AudioUrl))
+            {
+                return NotFound("Audio asset not found.");
+            }
+
+            var memoryStream = new MemoryStream();
+            try
+            {
+                await _storage.DownloadAsync(asset.AudioUrl, memoryStream, ct);
+                memoryStream.Position = 0;
+                var contentType = GetContentType(asset.AudioUrl);
+                return File(memoryStream, contentType);
+            }
+            catch (Exception)
+            {
+                return NotFound("Audio file not found in storage.");
+            }
+        }
+
+        [HttpGet("lessons/{lessonId:int}/images/{imageId:int}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DownloadLessonImage(int lessonId, int imageId, CancellationToken ct)
+        {
+            var lessonImage = await _unitOfWork.Repository<LessonImage>().GetByIdAsync(imageId);
+            if (lessonImage == null || lessonImage.IsDeleted || lessonImage.LessonId != lessonId || string.IsNullOrEmpty(lessonImage.ImageUrl))
+            {
+                return NotFound("Lesson image not found.");
+            }
+
+            var memoryStream = new MemoryStream();
+            try
+            {
+                await _storage.DownloadAsync(lessonImage.ImageUrl, memoryStream, ct);
+                memoryStream.Position = 0;
+                var contentType = GetContentType(lessonImage.ImageUrl);
+                return File(memoryStream, contentType);
+            }
+            catch (Exception)
+            {
+                return NotFound("Lesson image file not found in storage.");
+            }
+        }
+
+        private static string GetContentType(string path)
+        {
+            var ext = Path.GetExtension(path).ToLowerInvariant();
+            return ext switch
+            {
+                ".png" => "image/png",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".gif" => "image/gif",
+                ".mp3" => "audio/mpeg",
+                ".wav" => "audio/wav",
+                ".ogg" => "audio/ogg",
+                _ => "application/octet-stream"
+            };
         }
     }
 

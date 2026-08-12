@@ -12,8 +12,6 @@ namespace GodotXR.Application.Services
 
         Task<ApiResponse<IEnumerable<ResultResponse>>> GetByChildIdAsync(int childId);
 
-        Task<ApiResponse<IEnumerable<ResultResponse>>> GetByExerciseIdAsync(int exerciseId);
-
         Task<ApiResponse<ResultResponse>> UpdateFeedbackAsync(int id, string feedbackText);
     }
 }

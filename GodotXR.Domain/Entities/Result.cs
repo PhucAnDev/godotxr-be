@@ -6,8 +6,6 @@ namespace GodotXR.Domain.Entities
     {
         public int ChildId { get; set; }
 
-        public int? ExerciseId { get; set; } 
-
         public int? LessonId { get; set; }
 
         public ResultType ResultType { get; set; }
@@ -43,9 +41,6 @@ namespace GodotXR.Domain.Entities
         // Navigation Properties
         [ForeignKey(nameof(ChildId))]
         public ChildProfile Child { get; set; } = null!;
-
-        [ForeignKey(nameof(ExerciseId))]
-        public Exercise? Exercise { get; set; }
 
         [ForeignKey(nameof(LessonId))]
         public Lesson? Lesson { get; set; }

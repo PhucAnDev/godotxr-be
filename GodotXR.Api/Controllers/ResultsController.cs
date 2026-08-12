@@ -109,25 +109,6 @@ namespace GodotXR.Api.Controllers
             return Ok(result);
         }
 
-        [HttpGet("by-exercise/{exerciseId}")]
-        [Authorize(Roles = "Admin,Teacher")]
-        public async Task<IActionResult> GetByExercise(int exerciseId)
-        {
-            var currentUserId = User.GetUserId();
-
-            if (User.IsInRole("Teacher"))
-            {
-                var exercise = await _unitOfWork.ExerciseRepository.GetByIdAsync(exerciseId);
-                if (exercise == null || exercise.TeacherId != currentUserId)
-                    return Forbid();
-            }
-
-            var result = await _resultService.GetByExerciseIdAsync(exerciseId);
-            if (!result.Success)
-                return NotFound(result);
-            return Ok(result);
-        }
-
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public IActionResult Delete(int id)
