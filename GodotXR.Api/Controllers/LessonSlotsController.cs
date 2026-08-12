@@ -28,7 +28,7 @@ namespace GodotXR.Api.Controllers
 
         #region LessonImages
 
-        [HttpGet("api/lessons/{lessonId:int}/images")]
+        [HttpGet("api/lesson-images/{lessonId:int}")]
         [Authorize(Roles = "Admin,Teacher")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<LessonImageResponse>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetImages(int lessonId)
@@ -42,7 +42,7 @@ namespace GodotXR.Api.Controllers
             });
         }
 
-        [HttpPost("api/lessons/{lessonId:int}/images")]
+        [HttpPost("api/lesson-images/{lessonId:int}")]
         [Authorize(Roles = "Admin,Teacher")]
         [ProducesResponseType(typeof(ApiResponse<LessonImageResponse>), StatusCodes.Status201Created)]
         public async Task<IActionResult> UploadImage(int lessonId, [FromForm] UploadLessonImageRequest request)
@@ -75,7 +75,7 @@ namespace GodotXR.Api.Controllers
             }
         }
 
-        [HttpDelete("api/lessons/{lessonId:int}/images/{imageId:int}")]
+        [HttpDelete("api/lesson-images/{lessonId:int}/{imageId:int}")]
         [Authorize(Roles = "Admin,Teacher")]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteImage(int lessonId, int imageId)
