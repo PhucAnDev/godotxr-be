@@ -107,7 +107,7 @@ namespace GodotXR.Infrastructure.Configurations
                 .HasOne(ls => ls.Lesson)
                 .WithMany(l => l.LessonSlots)
                 .HasForeignKey(ls => ls.LessonId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<LessonSlot>()
                 .HasOne(ls => ls.LessonImage)

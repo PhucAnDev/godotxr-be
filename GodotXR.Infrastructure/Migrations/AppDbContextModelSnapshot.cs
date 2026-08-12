@@ -766,7 +766,7 @@ namespace GodotXR.Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 8, 12, 19, 21, 3, 837, DateTimeKind.Utc).AddTicks(6325),
+                            CreatedAt = new DateTime(2026, 8, 12, 21, 44, 46, 209, DateTimeKind.Utc).AddTicks(4761),
                             Description = "System Administrator",
                             IsActive = true,
                             IsDeleted = false,
@@ -775,7 +775,7 @@ namespace GodotXR.Infrastructure.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 8, 12, 19, 21, 3, 837, DateTimeKind.Utc).AddTicks(6339),
+                            CreatedAt = new DateTime(2026, 8, 12, 21, 44, 46, 209, DateTimeKind.Utc).AddTicks(4778),
                             Description = "Teacher",
                             IsActive = true,
                             IsDeleted = false,
@@ -784,7 +784,7 @@ namespace GodotXR.Infrastructure.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 8, 12, 19, 21, 3, 837, DateTimeKind.Utc).AddTicks(6341),
+                            CreatedAt = new DateTime(2026, 8, 12, 21, 44, 46, 209, DateTimeKind.Utc).AddTicks(4781),
                             Description = "Parent",
                             IsActive = true,
                             IsDeleted = false,
@@ -1125,7 +1125,7 @@ namespace GodotXR.Infrastructure.Migrations
                     b.HasOne("GodotXR.Domain.Entities.Lesson", "Lesson")
                         .WithMany("LessonSlots")
                         .HasForeignKey("LessonId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("GodotXR.Domain.Entities.LessonImage", "LessonImage")

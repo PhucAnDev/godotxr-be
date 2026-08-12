@@ -114,7 +114,7 @@ namespace GodotXR.Infrastructure.Migrations
                         column: x => x.LessonId,
                         principalTable: "Lessons",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.UpdateData(
@@ -122,21 +122,21 @@ namespace GodotXR.Infrastructure.Migrations
                 keyColumn: "Id",
                 keyValue: 1,
                 column: "CreatedAt",
-                value: new DateTime(2026, 8, 12, 19, 21, 3, 837, DateTimeKind.Utc).AddTicks(6325));
+                value: new DateTime(2026, 8, 12, 21, 44, 46, 209, DateTimeKind.Utc).AddTicks(4761));
 
             migrationBuilder.UpdateData(
                 table: "Roles",
                 keyColumn: "Id",
                 keyValue: 2,
                 column: "CreatedAt",
-                value: new DateTime(2026, 8, 12, 19, 21, 3, 837, DateTimeKind.Utc).AddTicks(6339));
+                value: new DateTime(2026, 8, 12, 21, 44, 46, 209, DateTimeKind.Utc).AddTicks(4778));
 
             migrationBuilder.UpdateData(
                 table: "Roles",
                 keyColumn: "Id",
                 keyValue: 3,
                 column: "CreatedAt",
-                value: new DateTime(2026, 8, 12, 19, 21, 3, 837, DateTimeKind.Utc).AddTicks(6341));
+                value: new DateTime(2026, 8, 12, 21, 44, 46, 209, DateTimeKind.Utc).AddTicks(4781));
 
             migrationBuilder.CreateIndex(
                 name: "IX_LessonImages_LessonId",
