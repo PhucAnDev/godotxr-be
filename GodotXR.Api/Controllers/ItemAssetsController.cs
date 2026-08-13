@@ -15,6 +15,7 @@ namespace GodotXR.Api.Controllers
     [ApiController]
     [Route("api/item-assets")]
     [Authorize]
+    [RequestSizeLimit(100 * 1024 * 1024)] // 100 MB request size limit
     public class ItemAssetsController : ControllerBase
     {
         private readonly IItemAssetService _itemAssetService;
