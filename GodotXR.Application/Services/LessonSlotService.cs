@@ -51,7 +51,7 @@ namespace GodotXR.Application.Services
             }
 
             var guid = Guid.NewGuid().ToString();
-            var objectKey = $"lessons/{lessonId}/images/{guid}_{fileName}";
+            var objectKey = $"lesson-images/{lessonId}/{guid}_{fileName}";
             
             await _storageService.UploadAsync(imageStream, objectKey, contentType, default);
 
