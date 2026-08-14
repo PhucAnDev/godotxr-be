@@ -147,6 +147,68 @@ namespace GodotXR.Api.Controllers
             }
         }
 
+        [HttpPut("api/lesson-slots/{lessonId:int}/{id:int}")]
+        [Authorize(Roles = "Admin,Teacher")]
+        [ProducesResponseType(typeof(ApiResponse<LessonSlotResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> UpdateSlot(int lessonId, int id, [FromBody] ConfigureSlotRequest request)
+        {
+            try
+            {
+                var result = await _lessonSlotService.UpdateSlotAsync(
+                    lessonId,
+                    id,
+                    request.SlotName,
+                    request.LessonImageId
+                );
+
+                if (result == null)
+                {
+                    return NotFound(new ApiResponse<LessonSlotResponse>
+                    {
+                        Success = false,
+                        Message = "Vị trí không tồn tại trong bài học này."
+                    });
+                }
+
+                return Ok(new ApiResponse<LessonSlotResponse>
+                {
+                    Success = true,
+                    Message = "Cập nhật vị trí thành công.",
+                    Data = result
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new ApiResponse<LessonSlotResponse>
+                {
+                    Success = false,
+                    Message = ex.Message
+                });
+            }
+        }
+
+        [HttpDelete("api/lesson-slots/{lessonId:int}/{id:int}")]
+        [Authorize(Roles = "Admin,Teacher")]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> DeleteSlot(int lessonId, int id)
+        {
+            var succeeded = await _lessonSlotService.DeleteSlotAsync(lessonId, id);
+            if (!succeeded)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Vị trí không tồn tại hoặc đã bị xóa."
+                });
+            }
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "Xóa vị trí thành công."
+            });
+        }
+
         private static string GenerateSlotIdentifier(string slotName)
         {
             if (string.IsNullOrWhiteSpace(slotName))

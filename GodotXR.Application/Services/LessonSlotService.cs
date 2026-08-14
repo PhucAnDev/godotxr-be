@@ -202,6 +202,51 @@ namespace GodotXR.Application.Services
             return activeSlots.Select(x => MapSlotResponse(x)).ToList();
         }
 
+        public async Task<LessonSlotResponse?> UpdateSlotAsync(int lessonId, int id, string slotName, int? lessonImageId)
+        {
+            var slotRepo = _unitOfWork.Repository<LessonSlot>();
+            var slot = await slotRepo.GetFirstOrDefaultAsync(
+                filter: s => s.Id == id && s.LessonId == lessonId && !s.IsDeleted,
+                includeProperties: "ItemAsset");
+
+            if (slot == null) return null;
+
+            if (lessonImageId.HasValue)
+            {
+                var imageRepo = _unitOfWork.Repository<LessonImage>();
+                var imageExists = await imageRepo.ExistsAsync(x => x.Id == lessonImageId.Value && x.LessonId == lessonId && !x.IsDeleted);
+                if (!imageExists)
+                {
+                    throw new KeyNotFoundException("Không tìm thấy ảnh góc chụp của bài học này.");
+                }
+            }
+
+            slot.SlotName = slotName;
+            slot.LessonImageId = lessonImageId;
+            slot.UpdatedAt = DateTime.UtcNow.AddHours(7);
+
+            slotRepo.Update(slot);
+            await _unitOfWork.SaveChangesAsync();
+
+            return MapSlotResponse(slot);
+        }
+
+        public async Task<bool> DeleteSlotAsync(int lessonId, int id)
+        {
+            var slotRepo = _unitOfWork.Repository<LessonSlot>();
+            var slot = await slotRepo.GetFirstOrDefaultAsync(
+                filter: s => s.Id == id && s.LessonId == lessonId && !s.IsDeleted);
+
+            if (slot == null) return false;
+
+            slot.IsDeleted = true;
+            slot.DeletedAt = DateTime.UtcNow.AddHours(7);
+
+            slotRepo.Update(slot);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
         private LessonImageResponse MapImageResponse(LessonImage img)
         {
             return new LessonImageResponse
