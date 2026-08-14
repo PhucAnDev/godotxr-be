@@ -350,7 +350,10 @@ namespace GodotXR.Api.Controllers
                 var response = await client.PostAsync(url, content, ct);
                 if (!response.IsSuccessStatusCode)
                 {
-                    return BadRequest($"Azure Speech API error: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
+                    var loadedKeyInfo = string.IsNullOrEmpty(subKey) 
+                        ? "null/empty" 
+                        : $"Length: {subKey.Length}, Start: {subKey[..Math.Min(4, subKey.Length)]}, End: {subKey[Math.Max(0, subKey.Length - 4)..]}";
+                    return BadRequest($"Azure Speech API error: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)} | Key Info: {loadedKeyInfo} | Region: {region}");
                 }
 
                 var responseString = await response.Content.ReadAsStringAsync(ct);
