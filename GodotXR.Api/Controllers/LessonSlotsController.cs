@@ -122,9 +122,10 @@ namespace GodotXR.Api.Controllers
         {
             try
             {
+                string slotIdentifier = GenerateSlotIdentifier(request.SlotName);
                 var result = await _lessonSlotService.ConfigureSlotAsync(
                     lessonId,
-                    request.SlotIdentifier,
+                    slotIdentifier,
                     request.SlotName,
                     request.LessonImageId
                 );
@@ -144,6 +145,57 @@ namespace GodotXR.Api.Controllers
                     Message = ex.Message
                 });
             }
+        }
+
+        private static string GenerateSlotIdentifier(string slotName)
+        {
+            if (string.IsNullOrWhiteSpace(slotName))
+                return "slot_" + Guid.NewGuid().ToString("N").Substring(0, 8);
+
+            string str = slotName.ToLowerInvariant();
+            var normalizedString = str.Normalize(System.Text.NormalizationForm.FormD);
+            var stringBuilder = new System.Text.StringBuilder();
+
+            foreach (var c in normalizedString)
+            {
+                var unicodeCategory = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
+                if (unicodeCategory != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    if (c == 'đ')
+                        stringBuilder.Append('d');
+                    else
+                        stringBuilder.Append(c);
+                }
+            }
+
+            string clean = stringBuilder.ToString().Normalize(System.Text.NormalizationForm.FormC);
+            var builder = new System.Text.StringBuilder();
+            bool prevWasUnderscore = false;
+            foreach (char c in clean)
+            {
+                if (char.IsLetterOrDigit(c))
+                {
+                    builder.Append(c);
+                    prevWasUnderscore = false;
+                }
+                else
+                {
+                    if (!prevWasUnderscore)
+                    {
+                        builder.Append('_');
+                        prevWasUnderscore = true;
+                    }
+                }
+            }
+
+            string result = builder.ToString().Trim('_');
+            string suffix = Guid.NewGuid().ToString("N").Substring(0, 6);
+            result = $"{result}_{suffix}";
+
+            if (result.Length > 150)
+                result = result.Substring(0, 150);
+
+            return result;
         }
 
         [HttpPut("api/lesson-slots/{lessonId:int}/{id:int}/assign")]
