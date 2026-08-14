@@ -220,7 +220,6 @@ namespace GodotXR.Application.Services
                 Id = slot.Id,
                 LessonId = slot.LessonId,
                 LessonImageId = slot.LessonImageId,
-                SlotIdentifier = slot.SlotIdentifier,
                 SlotName = slot.SlotName,
                 ItemAssetId = slot.ItemAssetId,
                 ItemAsset = slot.ItemAsset != null ? new ItemAssetResponse
