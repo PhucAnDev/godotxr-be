@@ -23,7 +23,6 @@ namespace GodotXR.Application.Services
         
         Task<LessonSlotResponse> ConfigureSlotAsync(
             int lessonId, 
-            string slotIdentifier, 
             string slotName, 
             int? lessonImageId);
 

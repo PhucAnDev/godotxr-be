@@ -124,6 +124,9 @@ namespace GodotXR.Application.Services
             if (!string.IsNullOrWhiteSpace(request.LearningLevel))
                 childProfile.LearningLevel = request.LearningLevel;
 
+            if (request.ChildType != null)
+                childProfile.ChildType = request.ChildType;
+
             if (request.Note != null)
                 childProfile.Note = request.Note;
 

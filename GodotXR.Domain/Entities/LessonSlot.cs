@@ -9,9 +9,6 @@ namespace GodotXR.Domain.Entities
 
         public int? LessonImageId { get; set; }
 
-        [Required, MaxLength(150)]
-        public string SlotIdentifier { get; set; } = string.Empty;
-
         [Required, MaxLength(200)]
         public string SlotName { get; set; } = string.Empty;
 

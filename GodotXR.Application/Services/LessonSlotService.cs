@@ -103,7 +103,6 @@ namespace GodotXR.Application.Services
 
         public async Task<LessonSlotResponse> ConfigureSlotAsync(
             int lessonId,
-            string slotIdentifier,
             string slotName,
             int? lessonImageId)
         {
@@ -127,7 +126,7 @@ namespace GodotXR.Application.Services
 
             var slotRepo = _unitOfWork.Repository<LessonSlot>();
             var existingSlot = await slotRepo.GetFirstOrDefaultAsync(
-                filter: s => s.LessonId == lessonId && s.SlotIdentifier == slotIdentifier && !s.IsDeleted,
+                filter: s => s.LessonId == lessonId && s.SlotName == slotName && !s.IsDeleted,
                 includeProperties: "ItemAsset");
 
             if (existingSlot != null)
@@ -143,7 +142,6 @@ namespace GodotXR.Application.Services
             var newSlot = new LessonSlot
             {
                 LessonId = lessonId,
-                SlotIdentifier = slotIdentifier,
                 SlotName = slotName,
                 LessonImageId = lessonImageId
             };

@@ -30,8 +30,6 @@ namespace GodotXR.Application.Services
             if (errors.Any())
                 return (false, false, errors, null);
 
-            var resultType = ResultType.Lesson;
-
             // BR-80: idempotent — cùng SessionId không tạo duplicate
             var existing = await _unitOfWork.ResultRepository.GetBySessionIdAsync(request.SessionId);
             if (existing != null)
@@ -96,8 +94,6 @@ namespace GodotXR.Application.Services
                 SessionId = request.SessionId,
 
                 ChildId = request.ChildId,
-
-                ResultType = resultType,
 
                 LessonId = request.LessonId,
 

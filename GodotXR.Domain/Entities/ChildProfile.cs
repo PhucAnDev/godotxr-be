@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GodotXR.Domain.Entities
@@ -19,6 +19,9 @@ namespace GodotXR.Domain.Entities
 
         [MaxLength(50)]
         public string LearningLevel { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string? ChildType { get; set; }
 
         public string? Note { get; set; }
 

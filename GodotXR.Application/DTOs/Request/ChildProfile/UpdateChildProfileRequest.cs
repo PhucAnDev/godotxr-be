@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace GodotXR.Application.DTOs.Request.ChildProfile
 {
@@ -16,6 +16,8 @@ namespace GodotXR.Application.DTOs.Request.ChildProfile
         public string? Gender { get; set; }
 
         public string? LearningLevel { get; set; }
+
+        public string? ChildType { get; set; }
 
         public string? Note { get; set; }
 

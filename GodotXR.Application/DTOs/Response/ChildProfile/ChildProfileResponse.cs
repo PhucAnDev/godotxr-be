@@ -1,4 +1,4 @@
-﻿namespace GodotXR.Application.DTOs.Response.ChildProfile
+namespace GodotXR.Application.DTOs.Response.ChildProfile
 {
     public sealed class ChildProfileResponse
     {
@@ -14,6 +14,8 @@
         public string Gender { get; set; } = string.Empty;
 
         public string LearningLevel { get; set; } = string.Empty;
+
+        public string? ChildType { get; set; }
 
         public string? Note { get; set; }
 
