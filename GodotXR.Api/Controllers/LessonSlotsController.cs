@@ -257,11 +257,7 @@ namespace GodotXR.Api.Controllers
                 ItemAsset = slot.ItemAsset != null ? new ClientConfigAssetResponse
                 {
                     Id = slot.ItemAsset.Id,
-                    ItemName = slot.ItemAsset.Name,
-                    AnswerSentence = slot.ItemAsset.AnswerSentence,
-                    ModelUrl = slot.ItemAsset.ModelUrl,
-                    ImageUrl = slot.ItemAsset.ImageUrl,
-                    AudioUrl = slot.ItemAsset.AudioUrl
+                    ItemName = slot.ItemAsset.Name
                 } : null
             });
 

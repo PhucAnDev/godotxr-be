@@ -17,17 +17,5 @@ namespace GodotXR.Application.DTOs.Response.LessonSlot
 
         [JsonPropertyName("ItemName")]
         public string ItemName { get; set; } = string.Empty;
-
-        [JsonPropertyName("AnswerSentence")]
-        public string AnswerSentence { get; set; } = string.Empty;
-
-        [JsonPropertyName("ModelUrl")]
-        public string ModelUrl { get; set; } = string.Empty;
-
-        [JsonPropertyName("ImageUrl")]
-        public string? ImageUrl { get; set; }
-
-        [JsonPropertyName("AudioUrl")]
-        public string? AudioUrl { get; set; }
     }
 }
