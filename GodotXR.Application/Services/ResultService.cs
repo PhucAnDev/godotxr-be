@@ -21,14 +21,11 @@ namespace GodotXR.Application.Services
         {
             var errors = new List<string>();
 
-            if (request.ExerciseId.HasValue && request.LessonId.HasValue)
-                errors.Add("Chỉ được cung cấp một trong hai thông tin: mã bài tập (ExerciseId) hoặc mã bài học (LessonId).");
-
-            if (!request.ExerciseId.HasValue && !request.LessonId.HasValue)
-                errors.Add("Phải cung cấp ít nhất một thông tin: mã bài tập (ExerciseId) hoặc mã bài học (LessonId).");
-
-            if (errors.Any())
+            if (!request.LessonId.HasValue)
+            {
+                errors.Add("Phải cung cấp mã bài học (LessonId).");
                 return (false, false, errors, null);
+            }
 
             // BR-80: idempotent — cùng SessionId không tạo duplicate
             var existing = await _unitOfWork.ResultRepository.GetBySessionIdAsync(request.SessionId);
@@ -48,20 +45,13 @@ namespace GodotXR.Application.Services
                 errors.Add("Trẻ chưa có hồ sơ ghi danh hoạt động tại bất kỳ lớp nào.");
 
             // BR-84: Lesson phải tồn tại
-            if (!request.LessonId.HasValue)
-            {
-                errors.Add("Thiếu mã bài học (LessonId).");
-            }
-            else
-            {
-                var lesson = await _unitOfWork.LessonRepository.GetByIdAsync(request.LessonId.Value);
+            var lesson = await _unitOfWork.LessonRepository.GetByIdAsync(request.LessonId.Value);
 
-                if (lesson == null)
-                    return (false, true, new[] { "Không tìm thấy bài học." }, null);
+            if (lesson == null)
+                return (false, true, new[] { "Không tìm thấy bài học." }, null);
 
-                if (lesson.Status != "Active")
-                    errors.Add("Bài học không ở trạng thái Hoạt động.");
-            }
+            if (lesson.Status != "Active")
+                errors.Add("Bài học không ở trạng thái Hoạt động.");
 
             // BR-86: Score range
             if (request.Score < 0 || request.Score > 100)
