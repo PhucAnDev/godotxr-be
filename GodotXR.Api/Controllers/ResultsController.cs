@@ -109,17 +109,6 @@ namespace GodotXR.Api.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
-        public IActionResult Delete(int id)
-        {
-            return BadRequest(new ApiResponse
-            {
-                Success = false,
-                Message = "Finalized results cannot be permanently deleted." 
-            });
-        }
-
         [HttpPut("{id}/feedback")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> UpdateFeedback(int id, [FromBody] UpdateFeedbackRequest request)
