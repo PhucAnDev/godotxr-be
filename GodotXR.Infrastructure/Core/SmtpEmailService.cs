@@ -34,7 +34,15 @@ namespace GodotXR.Infrastructure.Core
             };
             mailMessage.To.Add(toEmail);
 
-            await client.SendMailAsync(mailMessage);
+            try
+            {
+                await client.SendMailAsync(mailMessage);
+            }
+            catch (Exception ex)
+            {
+                var keyMask = string.IsNullOrEmpty(_options.ApiKey) ? "EMPTY" : $"{_options.ApiKey[..Math.Min(3, _options.ApiKey.Length)]}***(len={_options.ApiKey.Length})";
+                throw new Exception($"SMTP Send Error [From: '{_options.FromEmail}', Key: '{keyMask}', Host: 'smtp.gmail.com:587']: {ex.Message}", ex);
+            }
         }
     }
 }
