@@ -19,8 +19,10 @@ namespace GodotXR.Infrastructure.Core
         {
             using var client = new SmtpClient("smtp.gmail.com", 587)
             {
+                UseDefaultCredentials = false,
                 Credentials = new NetworkCredential(_options.FromEmail, _options.ApiKey),
-                EnableSsl = true
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network
             };
 
             var mailMessage = new MailMessage
