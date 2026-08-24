@@ -1,8 +1,9 @@
 using GodotXR.Application.Services;
 using GodotXR.Infrastructure.Configurations;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.Extensions.Options;
-using System.Net;
-using System.Net.Mail;
+using MimeKit;
 
 namespace GodotXR.Infrastructure.Core
 {
@@ -17,31 +18,29 @@ namespace GodotXR.Infrastructure.Core
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
-            using var client = new SmtpClient("smtp.gmail.com", 587)
-            {
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(_options.FromEmail, _options.ApiKey),
-                EnableSsl = true,
-                DeliveryMethod = SmtpDeliveryMethod.Network
-            };
-
-            var mailMessage = new MailMessage
-            {
-                From = new MailAddress(_options.FromEmail, _options.FromName),
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = true
-            };
-            mailMessage.To.Add(toEmail);
-
             try
             {
-                await client.SendMailAsync(mailMessage);
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress(_options.FromName, _options.FromEmail));
+                message.To.Add(MailboxAddress.Parse(toEmail));
+                message.Subject = subject;
+
+                var bodyBuilder = new BodyBuilder
+                {
+                    HtmlBody = body
+                };
+                message.Body = bodyBuilder.ToMessageBody();
+
+                using var client = new SmtpClient();
+                await client.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                await client.AuthenticateAsync(_options.FromEmail, _options.ApiKey);
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
             }
             catch (Exception ex)
             {
                 var keyMask = string.IsNullOrEmpty(_options.ApiKey) ? "EMPTY" : $"{_options.ApiKey[..Math.Min(3, _options.ApiKey.Length)]}***(len={_options.ApiKey.Length})";
-                throw new Exception($"SMTP Send Error [From: '{_options.FromEmail}', Key: '{keyMask}', Host: 'smtp.gmail.com:587']: {ex.Message}", ex);
+                throw new Exception($"MailKit SMTP Send Error [From: '{_options.FromEmail}', Key: '{keyMask}']: {ex.Message}", ex);
             }
         }
     }
