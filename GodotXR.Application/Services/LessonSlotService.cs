@@ -104,7 +104,9 @@ namespace GodotXR.Application.Services
         public async Task<LessonSlotResponse> ConfigureSlotAsync(
             int lessonId,
             string slotName,
-            int? lessonImageId)
+            int? lessonImageId,
+            float correctPoints = 10f,
+            float wrongPoints = 10f)
         {
             // Verify Lesson
             var lesson = await _unitOfWork.LessonRepository.GetByIdAsync(lessonId);
@@ -133,6 +135,8 @@ namespace GodotXR.Application.Services
             {
                 existingSlot.SlotName = slotName;
                 existingSlot.LessonImageId = lessonImageId;
+                existingSlot.CorrectPoints = correctPoints;
+                existingSlot.WrongPoints = wrongPoints;
                 existingSlot.UpdatedAt = DateTime.UtcNow.AddHours(7);
                 slotRepo.Update(existingSlot);
                 await _unitOfWork.SaveChangesAsync();
@@ -143,7 +147,9 @@ namespace GodotXR.Application.Services
             {
                 LessonId = lessonId,
                 SlotName = slotName,
-                LessonImageId = lessonImageId
+                LessonImageId = lessonImageId,
+                CorrectPoints = correctPoints,
+                WrongPoints = wrongPoints
             };
 
             await slotRepo.AddAsync(newSlot);
@@ -200,7 +206,13 @@ namespace GodotXR.Application.Services
             return activeSlots.Select(x => MapSlotResponse(x)).ToList();
         }
 
-        public async Task<LessonSlotResponse?> UpdateSlotAsync(int lessonId, int id, string slotName, int? lessonImageId)
+        public async Task<LessonSlotResponse?> UpdateSlotAsync(
+            int lessonId, 
+            int id, 
+            string slotName, 
+            int? lessonImageId,
+            float correctPoints = 10f,
+            float wrongPoints = 10f)
         {
             var slotRepo = _unitOfWork.Repository<LessonSlot>();
             var slot = await slotRepo.GetFirstOrDefaultAsync(
@@ -221,6 +233,8 @@ namespace GodotXR.Application.Services
 
             slot.SlotName = slotName;
             slot.LessonImageId = lessonImageId;
+            slot.CorrectPoints = correctPoints;
+            slot.WrongPoints = wrongPoints;
             slot.UpdatedAt = DateTime.UtcNow.AddHours(7);
 
             slotRepo.Update(slot);
@@ -265,6 +279,8 @@ namespace GodotXR.Application.Services
                 LessonImageId = slot.LessonImageId,
                 SlotName = slot.SlotName,
                 ItemAssetId = slot.ItemAssetId,
+                CorrectPoints = slot.CorrectPoints,
+                WrongPoints = slot.WrongPoints,
                 ItemAsset = slot.ItemAsset != null ? new ItemAssetResponse
                 {
                     Id = slot.ItemAsset.Id,

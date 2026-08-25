@@ -83,6 +83,8 @@ namespace GodotXR.Application.Services
                 EstimatedDuration = request.EstimatedDuration,
                 Status = request.Status,
                 MaxScore = request.MaxScore,
+                CompletionBonusPoints = request.CompletionBonusPoints,
+                Note = request.Note,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -122,6 +124,8 @@ namespace GodotXR.Application.Services
             lesson.EstimatedDuration = request.EstimatedDuration;
             lesson.Status = request.Status;
             lesson.MaxScore = request.MaxScore;
+            lesson.CompletionBonusPoints = request.CompletionBonusPoints;
+            lesson.Note = request.Note;
             lesson.UpdatedAt = DateTime.UtcNow;
 
             await _unitOfWork.SaveChangesAsync();

@@ -24,9 +24,17 @@ namespace GodotXR.Application.Services
         Task<LessonSlotResponse> ConfigureSlotAsync(
             int lessonId, 
             string slotName, 
-            int? lessonImageId);
+            int? lessonImageId,
+            float correctPoints = 10f,
+            float wrongPoints = 10f);
 
-        Task<LessonSlotResponse?> UpdateSlotAsync(int lessonId, int id, string slotName, int? lessonImageId);
+        Task<LessonSlotResponse?> UpdateSlotAsync(
+            int lessonId, 
+            int id, 
+            string slotName, 
+            int? lessonImageId,
+            float correctPoints = 10f,
+            float wrongPoints = 10f);
         
         Task<bool> DeleteSlotAsync(int lessonId, int id);
             

@@ -9,6 +9,8 @@ namespace GodotXR.Application.DTOs.Response.LessonSlot
         public int? LessonImageId { get; set; }
         public string SlotName { get; set; } = string.Empty;
         public int? ItemAssetId { get; set; }
+        public float CorrectPoints { get; set; }
+        public float WrongPoints { get; set; }
         public ItemAssetResponse? ItemAsset { get; set; }
     }
 }

@@ -23,6 +23,10 @@ namespace GodotXR.Domain.Entities
 
         public float MaxScore { get; set; } = 100f;
 
+        public float CompletionBonusPoints { get; set; } = 20f;
+
+        public string? Note { get; set; }
+
         public Program Program { get; set; } = null!;
 
         public ICollection<LessonImage> LessonImages { get; set; } = new List<LessonImage>();

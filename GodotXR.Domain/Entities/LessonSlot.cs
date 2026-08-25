@@ -14,6 +14,10 @@ namespace GodotXR.Domain.Entities
 
         public int? ItemAssetId { get; set; }
 
+        public float CorrectPoints { get; set; } = 10f;
+
+        public float WrongPoints { get; set; } = 10f;
+
         [ForeignKey(nameof(LessonId))]
         public Lesson Lesson { get; set; } = null!;
 

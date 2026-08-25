@@ -22,5 +22,9 @@ namespace GodotXR.Application.DTOs.Request.Lesson
         public string Status { get; set; } = "Active";
 
         public float MaxScore { get; set; } = 100f;
+
+        public float CompletionBonusPoints { get; set; } = 20f;
+
+        public string? Note { get; set; }
     }
 }

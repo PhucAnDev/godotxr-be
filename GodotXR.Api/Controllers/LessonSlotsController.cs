@@ -125,7 +125,9 @@ namespace GodotXR.Api.Controllers
                 var result = await _lessonSlotService.ConfigureSlotAsync(
                     lessonId,
                     request.SlotName,
-                    request.LessonImageId
+                    request.LessonImageId,
+                    request.CorrectPoints,
+                    request.WrongPoints
                 );
 
                 return Ok(new ApiResponse<LessonSlotResponse>
@@ -156,7 +158,9 @@ namespace GodotXR.Api.Controllers
                     lessonId,
                     id,
                     request.SlotName,
-                    request.LessonImageId
+                    request.LessonImageId,
+                    request.CorrectPoints,
+                    request.WrongPoints
                 );
 
                 if (result == null)
