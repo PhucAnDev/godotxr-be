@@ -257,6 +257,8 @@ namespace GodotXR.Api.Controllers
                 Id = slot.Id,
                 LessonId = slot.LessonId,
                 SlotName = slot.SlotName,
+                CorrectPoints = slot.CorrectPoints,
+                WrongPoints = slot.WrongPoints,
                 ItemAssetId = slot.ItemAssetId,
                 ItemAsset = slot.ItemAsset != null ? new ClientConfigAssetResponse
                 {
