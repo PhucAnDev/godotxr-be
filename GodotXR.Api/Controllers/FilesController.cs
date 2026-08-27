@@ -1,3 +1,4 @@
+using GodotXR.Application.DTOs.External;
 using GodotXR.Application.DTOs.Response.FileUpload;
 using GodotXR.Application.Services;
 using GodotXR.Domain.Entities;
@@ -345,30 +346,89 @@ namespace GodotXR.Api.Controllers
 
             var url = $"https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language={language}";
 
+            AzureSpeechAssessmentResult? azureResult;
             try
             {
                 var response = await client.PostAsync(url, content, ct);
                 if (!response.IsSuccessStatusCode)
                 {
-                    var loadedKeyInfo = string.IsNullOrEmpty(subKey) 
-                        ? "null/empty" 
-                        : $"Length: {subKey.Length}, Start: {subKey[..Math.Min(4, subKey.Length)]}, End: {subKey[Math.Max(0, subKey.Length - 4)..]}";
-                    return BadRequest($"Azure Speech API error: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)} | Key Info: {loadedKeyInfo} | Region: {region}");
+                    return BadRequest($"Azure Speech API error: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
                 }
 
                 var responseString = await response.Content.ReadAsStringAsync(ct);
-                var node = System.Text.Json.Nodes.JsonNode.Parse(responseString);
-                if (node != null && node["NBest"] is System.Text.Json.Nodes.JsonArray nbest && nbest.Count > 0)
-                {
-                    return Ok(nbest[0]);
-                }
-
-                return Ok(node);
+                azureResult = System.Text.Json.JsonSerializer.Deserialize<AzureSpeechAssessmentResult>(
+                    responseString,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Error communicating with Azure: {ex.Message}");
             }
+
+            if (azureResult?.RecognitionStatus != "Success" || azureResult.NBest.Count == 0)
+            {
+                return BadRequest($"Azure could not recognize speech. Status: {azureResult?.RecognitionStatus}");
+            }
+
+            var best = azureResult.NBest[0];
+            var scores = best.PronunciationAssessment ?? new AzurePronunciationScore();
+
+            // Cập nhật điểm tổng vào Result (tìm theo SessionId)
+            var dbResult = await _unitOfWork.ResultRepository.GetBySessionIdAsync(request.SessionId);
+            var issues = new List<PhonemeIssue>();
+
+            if (dbResult != null)
+            {
+                dbResult.Score = (float)scores.PronScore;
+                dbResult.CorrectCount = best.Words.Count(w => (w.PronunciationAssessment?.ErrorType ?? "None") == "None");
+                dbResult.ErrorCount = best.Words.Count(w => (w.PronunciationAssessment?.ErrorType ?? "None") != "None");
+
+                _unitOfWork.ResultRepository.Update(dbResult);
+
+                // Ghi chi tiết từng phoneme có vấn đề vào PronunciationDetail
+                const double accuracyThreshold = 70.0; // TODO: chốt lại ngưỡng này với leader/chuyên gia
+                foreach (var word in best.Words)
+                {
+                    var wordErrorType = word.PronunciationAssessment?.ErrorType ?? "None";
+                    foreach (var phoneme in word.Phonemes)
+                    {
+                        var phonemeAccuracy = phoneme.PronunciationAssessment?.AccuracyScore ?? 0;
+                        if (phonemeAccuracy < accuracyThreshold || wordErrorType != "None")
+                        {
+                            var detail = new PronunciationDetail
+                            {
+                                ResultId = dbResult.Id,
+                                ExpectedPhoneme = phoneme.Phoneme,
+                                ActualPhoneme = phoneme.Phoneme, // Azure không trả phoneme "thực tế nói ra", chỉ chấm điểm phoneme kỳ vọng
+                                AccuracyScore = (int)phonemeAccuracy,
+                                IssueType = wordErrorType != "None" ? wordErrorType : "LowAccuracy"
+                            };
+                            await _unitOfWork.PronunciationDetailRepository.AddAsync(detail);
+
+                            issues.Add(new PhonemeIssue
+                            {
+                                Word = word.Word,
+                                Phoneme = phoneme.Phoneme,
+                                AccuracyScore = phonemeAccuracy,
+                                ErrorType = wordErrorType
+                            });
+                        }
+                    }
+                }
+
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return Ok(new AssessChunkResponse
+            {
+                ChunkIndex = request.ChunkIndex,
+                RecognizedText = azureResult.DisplayText ?? best.Display ?? string.Empty,
+                AccuracyScore = scores.AccuracyScore,
+                FluencyScore = scores.FluencyScore,
+                CompletenessScore = scores.CompletenessScore,
+                PronScore = scores.PronScore,
+                Issues = issues
+            });
         }
 
         [HttpGet("assets/{assetId:int}/model")]
@@ -496,5 +556,24 @@ namespace GodotXR.Api.Controllers
 
         [Required]
         public string ReferenceText { get; set; } = null!;
+    }
+
+    public class AssessChunkResponse
+    {
+        public int ChunkIndex { get; set; }
+        public string RecognizedText { get; set; } = string.Empty;
+        public double AccuracyScore { get; set; }
+        public double FluencyScore { get; set; }
+        public double CompletenessScore { get; set; }
+        public double PronScore { get; set; }
+        public List<PhonemeIssue> Issues { get; set; } = new();
+    }
+
+    public class PhonemeIssue
+    {
+        public string Word { get; set; } = string.Empty;
+        public string Phoneme { get; set; } = string.Empty;
+        public double AccuracyScore { get; set; }
+        public string ErrorType { get; set; } = "None";
     }
 }
