@@ -185,6 +185,35 @@ namespace GodotXR.Infrastructure.Configurations
 
             modelBuilder.Entity<Analyze>().HasQueryFilter(a => !a.IsDeleted);
             modelBuilder.Entity<Report>().HasQueryFilter(r => !r.IsDeleted);
+
+            // =========================================================
+            // ĐỘ CHÍNH XÁC PHÁT ÂM TỪ (ChildSpeechAccuracy)
+            // =========================================================
+            modelBuilder.Entity<ChildSpeechAccuracy>()
+                .HasOne(csa => csa.Child)
+                .WithMany()
+                .HasForeignKey(csa => csa.ChildProfileId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ChildSpeechAccuracy>()
+                .HasOne(csa => csa.Lesson)
+                .WithMany()
+                .HasForeignKey(csa => csa.LessonId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ChildSpeechAccuracy>()
+                .HasOne(csa => csa.LessonSlot)
+                .WithMany()
+                .HasForeignKey(csa => csa.LessonSlotId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ChildSpeechAccuracy>()
+                .HasOne(csa => csa.Result)
+                .WithMany()
+                .HasForeignKey(csa => csa.ResultId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ChildSpeechAccuracy>().HasQueryFilter(csa => !csa.IsDeleted);
         }
     }
 }

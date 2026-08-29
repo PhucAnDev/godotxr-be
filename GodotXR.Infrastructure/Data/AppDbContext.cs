@@ -37,6 +37,8 @@ namespace GodotXR.Infrastructure.Data
 
         public DbSet<PronunciationDetail> PronunciationDetails { get; set; }
 
+        public DbSet<ChildSpeechAccuracy> ChildSpeechAccuracies { get; set; }
+
         public DbSet<EventLog> EventLogs { get; set; }
 
         public DbSet<Analyze> Analyzes { get; set; }

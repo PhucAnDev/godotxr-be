@@ -360,7 +360,50 @@ namespace GodotXR.Api.Controllers
                 var node = System.Text.Json.Nodes.JsonNode.Parse(responseString);
                 if (node != null && node["NBest"] is System.Text.Json.Nodes.JsonArray nbest && nbest.Count > 0)
                 {
-                    return Ok(nbest[0]);
+                    var bestItem = nbest[0];
+                    try
+                    {
+                        var pronAssess = bestItem["PronunciationAssessment"];
+                        float overallFluency = pronAssess?["FluencyScore"]?.GetValue<float>() ?? 0f;
+                        float overallPron = pronAssess?["PronScore"]?.GetValue<float>() ?? pronAssess?["PronunciationScore"]?.GetValue<float>() ?? 0f;
+                        float overallCompleteness = pronAssess?["CompletenessScore"]?.GetValue<float>() ?? 0f;
+
+                        if (bestItem["Words"] is System.Text.Json.Nodes.JsonArray wordsArray)
+                        {
+                            foreach (var wNode in wordsArray)
+                            {
+                                var wordStr = wNode["Word"]?.ToString() ?? string.Empty;
+                                if (string.IsNullOrWhiteSpace(wordStr)) continue;
+
+                                var wAssess = wNode["PronunciationAssessment"];
+                                float wAcc = wAssess?["AccuracyScore"]?.GetValue<float>() ?? 0f;
+                                string? wErr = wAssess?["ErrorType"]?.ToString();
+
+                                var accuracyEntity = new ChildSpeechAccuracy
+                                {
+                                    ChildProfileId = request.ChildProfileId,
+                                    SessionId = request.SessionId,
+                                    AudioChunkIndex = request.ChunkIndex,
+                                    Word = wordStr,
+                                    AccuracyScore = wAcc,
+                                    FluencyScore = overallFluency,
+                                    PronunciationScore = overallPron,
+                                    CompletenessScore = overallCompleteness,
+                                    ErrorType = wErr,
+                                    CreatedAt = DateTime.UtcNow
+                                };
+
+                                await _unitOfWork.ChildSpeechAccuracyRepository.AddAsync(accuracyEntity);
+                            }
+                            await _unitOfWork.SaveChangesAsync();
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Ignore DB save errors so API assessment response is not interrupted
+                    }
+
+                    return Ok(bestItem);
                 }
 
                 return Ok(node);
