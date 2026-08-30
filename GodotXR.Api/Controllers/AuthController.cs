@@ -22,6 +22,26 @@ namespace GodotXR.Api.Controllers
             _cache = cache;
         }
 
+        [HttpPost("register")]
+        public async Task<ActionResult> Register([FromBody] RegisterRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var validErrors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+                return BadRequest(new ApiResponse<RegisterResponse> { Success = false, Message = "Validation failed.", Errors = validErrors });
+            }
+
+            var (ok, errors, data) = await _authService.RegisterAsync(request);
+
+            if (!ok || data == null)
+                return BadRequest(new ApiResponse<RegisterResponse> { Success = false, Message = "Register failed.", Errors = errors.ToList() });
+
+            return Ok(new ApiResponse<RegisterResponse> { Success = true, Message = "Register successful.", Data = data });
+        }
+
         [HttpPost("login")]
         public async Task<ActionResult> Login([FromBody] LoginRequest request)
         {
@@ -124,7 +144,6 @@ namespace GodotXR.Api.Controllers
             return Ok(new ApiResponse { Success = true, Message = "Password has been changed successfully." });
         }
 
-        // ✅ Endpoint mới
         [HttpGet("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromQuery] string token)
         {
