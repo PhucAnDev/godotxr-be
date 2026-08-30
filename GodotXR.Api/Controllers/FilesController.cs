@@ -370,6 +370,18 @@ namespace GodotXR.Api.Controllers
 
                         if (bestItem["Words"] is System.Text.Json.Nodes.JsonArray wordsArray)
                         {
+                            // Soft delete existing speech accuracy records for this chunk to prevent duplicate rows
+                            var existingRecords = await _unitOfWork.ChildSpeechAccuracyRepository.GetByChunkAsync(
+                                request.ChildProfileId,
+                                request.SessionId,
+                                request.ChunkIndex);
+
+                            foreach (var existing in existingRecords)
+                            {
+                                existing.IsDeleted = true;
+                                existing.DeletedAt = DateTime.UtcNow;
+                            }
+
                             foreach (var wNode in wordsArray)
                             {
                                 var wordStr = wNode["Word"]?.ToString() ?? string.Empty;

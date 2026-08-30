@@ -53,6 +53,21 @@ namespace GodotXR.Api.Controllers
             });
         }
 
+        [HttpGet("search")]
+        public async Task<IActionResult> GetByChunk(
+            [FromQuery] int childProfileId,
+            [FromQuery] string sessionId,
+            [FromQuery] int audioChunkIndex)
+        {
+            var data = await _service.GetByChunkAsync(childProfileId, sessionId, audioChunkIndex);
+            return Ok(new ApiResponse<IEnumerable<ChildSpeechAccuracyResponse>>
+            {
+                Success = true,
+                Message = "OK",
+                Data = data
+            });
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateChildSpeechAccuracyRequest request)
         {

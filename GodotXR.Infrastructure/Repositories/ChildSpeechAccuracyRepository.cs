@@ -26,5 +26,11 @@ namespace GodotXR.Infrastructure.Repositories
                 .Where(csa => csa.LessonId == lessonId && !csa.IsDeleted)
                 .OrderByDescending(csa => csa.CreatedAt)
                 .ToListAsync();
+
+        public async Task<IEnumerable<ChildSpeechAccuracy>> GetByChunkAsync(int childProfileId, string sessionId, int audioChunkIndex)
+            => await _context.ChildSpeechAccuracies
+                .Where(csa => csa.ChildProfileId == childProfileId && csa.SessionId == sessionId && csa.AudioChunkIndex == audioChunkIndex && !csa.IsDeleted)
+                .OrderByDescending(csa => csa.CreatedAt)
+                .ToListAsync();
     }
 }

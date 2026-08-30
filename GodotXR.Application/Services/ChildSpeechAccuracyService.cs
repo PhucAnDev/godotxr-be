@@ -35,6 +35,12 @@ namespace GodotXR.Application.Services
             return _mapper.Map<IEnumerable<ChildSpeechAccuracyResponse>>(list);
         }
 
+        public async Task<IEnumerable<ChildSpeechAccuracyResponse>> GetByChunkAsync(int childProfileId, string sessionId, int audioChunkIndex)
+        {
+            var list = await _unitOfWork.ChildSpeechAccuracyRepository.GetByChunkAsync(childProfileId, sessionId, audioChunkIndex);
+            return _mapper.Map<IEnumerable<ChildSpeechAccuracyResponse>>(list);
+        }
+
         public async Task<ChildSpeechAccuracyResponse> CreateAsync(CreateChildSpeechAccuracyRequest request)
         {
             var entity = _mapper.Map<ChildSpeechAccuracy>(request);
