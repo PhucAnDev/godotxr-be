@@ -363,8 +363,10 @@ namespace GodotXR.Api.Controllers
                 {
                     var bestItem = nbest[0];
 
-                    // Extract actual spoken text recognized by Azure STT (e.g., "triệu kirkard.")
-                    string actualSpokenText = bestItem["Display"]?.ToString() ?? bestItem["Lexical"]?.ToString() ?? node["DisplayText"]?.ToString() ?? string.Empty;
+                    // Extract actual spoken text from request (InteractionLog) or recognized by Azure STT (e.g., "triệu kirkard.")
+                    string actualSpokenText = !string.IsNullOrWhiteSpace(request.SpokenText) && request.SpokenText != "N/A"
+                        ? request.SpokenText
+                        : (bestItem["Display"]?.ToString() ?? bestItem["Lexical"]?.ToString() ?? node["DisplayText"]?.ToString() ?? string.Empty);
 
                     // Calculate phrase similarity score between reference text and actual spoken text
                     float phraseSim = PhraseSimilarityHelper.CalculateSimilarity(request.ReferenceText, actualSpokenText);
@@ -623,5 +625,7 @@ namespace GodotXR.Api.Controllers
 
         [Required]
         public string ReferenceText { get; set; } = null!;
+
+        public string? SpokenText { get; set; }
     }
 }
