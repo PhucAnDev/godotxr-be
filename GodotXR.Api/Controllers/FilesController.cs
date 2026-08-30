@@ -399,62 +399,50 @@ namespace GodotXR.Api.Controllers
                             pronObj["FluencyScore"] = calibratedFluency;
                         }
 
-                        if (bestItem["Words"] is System.Text.Json.Nodes.JsonArray wordsArray)
+                        // Soft delete existing speech accuracy records for this chunk to prevent duplicate rows
+                        var existingRecords = await _unitOfWork.ChildSpeechAccuracyRepository.GetByChunkAsync(
+                            request.ChildProfileId,
+                            request.SessionId,
+                            request.ChunkIndex);
+
+                        foreach (var existing in existingRecords)
                         {
-                            // Soft delete existing speech accuracy records for this chunk to prevent duplicate rows
-                            var existingRecords = await _unitOfWork.ChildSpeechAccuracyRepository.GetByChunkAsync(
-                                request.ChildProfileId,
-                                request.SessionId,
-                                request.ChunkIndex);
-
-                            foreach (var existing in existingRecords)
-                            {
-                                existing.IsDeleted = true;
-                                existing.DeletedAt = DateTime.UtcNow;
-                            }
-
-                            foreach (var wNode in wordsArray)
-                            {
-                                var wordStr = wNode["Word"]?.ToString() ?? string.Empty;
-                                if (string.IsNullOrWhiteSpace(wordStr)) continue;
-
-                                var wAssess = wNode["PronunciationAssessment"];
-                                float wAcc = wAssess?["AccuracyScore"]?.GetValue<float>() ?? 0f;
-                                string? wErr = wAssess?["ErrorType"]?.ToString();
-
-                                // Calibrate word accuracy score if phrase similarity is low
-                                float calibratedWordAcc = Math.Clamp(wAcc * (0.3f + 0.7f * (phraseSim / 100f)), 0f, 100f);
-                                calibratedWordAcc = MathF.Round(calibratedWordAcc, 1);
-
-                                if (phraseSim < 40f && (wErr == "None" || string.IsNullOrEmpty(wErr)))
-                                {
-                                    wErr = "Mispronunciation";
-                                }
-
-                                if (wAssess is System.Text.Json.Nodes.JsonObject wAssessObj)
-                                {
-                                    wAssessObj["AccuracyScore"] = calibratedWordAcc;
-                                    if (wErr != null) wAssessObj["ErrorType"] = wErr;
-                                }
-
-                                var accuracyEntity = new ChildSpeechAccuracy
-                                {
-                                    ChildProfileId = request.ChildProfileId,
-                                    SessionId = request.SessionId,
-                                    AudioChunkIndex = request.ChunkIndex,
-                                    Word = wordStr,
-                                    AccuracyScore = calibratedWordAcc,
-                                    FluencyScore = calibratedFluency,
-                                    PronunciationScore = calibratedPron,
-                                    CompletenessScore = calibratedCompleteness,
-                                    ErrorType = wErr,
-                                    CreatedAt = DateTime.UtcNow
-                                };
-
-                                await _unitOfWork.ChildSpeechAccuracyRepository.AddAsync(accuracyEntity);
-                            }
-                            await _unitOfWork.SaveChangesAsync();
+                            existing.IsDeleted = true;
+                            existing.DeletedAt = DateTime.UtcNow;
                         }
+
+                        string phraseText = string.IsNullOrWhiteSpace(request.ReferenceText) ? "N/A" : request.ReferenceText.Trim();
+                        string phraseErrorType = calibratedAccuracy < 50f ? "Mispronunciation" : "None";
+
+                        // Save phrase-level entity to ChildSpeechAccuracies DB table
+                        var phraseEntity = new ChildSpeechAccuracy
+                        {
+                            ChildProfileId = request.ChildProfileId,
+                            SessionId = request.SessionId,
+                            AudioChunkIndex = request.ChunkIndex,
+                            Word = phraseText,
+                            AccuracyScore = calibratedAccuracy,
+                            FluencyScore = calibratedFluency,
+                            PronunciationScore = calibratedPron,
+                            CompletenessScore = calibratedCompleteness,
+                            ErrorType = phraseErrorType,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        await _unitOfWork.ChildSpeechAccuracyRepository.AddAsync(phraseEntity);
+                        await _unitOfWork.SaveChangesAsync();
+
+                        // Set response bestItem["Words"] to present the phrase item
+                        var phraseWordNode = new System.Text.Json.Nodes.JsonObject
+                        {
+                            ["Word"] = phraseText,
+                            ["PronunciationAssessment"] = new System.Text.Json.Nodes.JsonObject
+                            {
+                                ["AccuracyScore"] = calibratedAccuracy,
+                                ["ErrorType"] = phraseErrorType
+                            }
+                        };
+                        bestItem["Words"] = new System.Text.Json.Nodes.JsonArray { phraseWordNode };
                     }
                     catch (Exception)
                     {
