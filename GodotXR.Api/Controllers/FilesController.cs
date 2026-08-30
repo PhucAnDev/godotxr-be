@@ -1,4 +1,5 @@
 using GodotXR.Application.DTOs.Response.FileUpload;
+using GodotXR.Application.Helpers;
 using GodotXR.Application.Services;
 using GodotXR.Domain.Entities;
 using GodotXR.Domain.IUnitOfWork;
@@ -361,12 +362,42 @@ namespace GodotXR.Api.Controllers
                 if (node != null && node["NBest"] is System.Text.Json.Nodes.JsonArray nbest && nbest.Count > 0)
                 {
                     var bestItem = nbest[0];
+
+                    // Extract actual spoken text recognized by Azure STT (e.g., "triệu kirkard.")
+                    string actualSpokenText = bestItem["Display"]?.ToString() ?? bestItem["Lexical"]?.ToString() ?? node["DisplayText"]?.ToString() ?? string.Empty;
+
+                    // Calculate phrase similarity score between reference text and actual spoken text
+                    float phraseSim = PhraseSimilarityHelper.CalculateSimilarity(request.ReferenceText, actualSpokenText);
+
                     try
                     {
                         var pronAssess = bestItem["PronunciationAssessment"];
-                        float overallFluency = pronAssess?["FluencyScore"]?.GetValue<float>() ?? 0f;
-                        float overallPron = pronAssess?["PronScore"]?.GetValue<float>() ?? pronAssess?["PronunciationScore"]?.GetValue<float>() ?? 0f;
-                        float overallCompleteness = pronAssess?["CompletenessScore"]?.GetValue<float>() ?? 0f;
+                        float rawFluency = pronAssess?["FluencyScore"]?.GetValue<float>() ?? 0f;
+                        float rawPron = pronAssess?["PronScore"]?.GetValue<float>() ?? pronAssess?["PronunciationScore"]?.GetValue<float>() ?? 0f;
+                        float rawCompleteness = pronAssess?["CompletenessScore"]?.GetValue<float>() ?? 0f;
+                        float rawAccuracy = pronAssess?["AccuracyScore"]?.GetValue<float>() ?? 0f;
+
+                        // Calibrate overall scores based on phrase similarity match
+                        float calibratedAccuracy = Math.Clamp(rawAccuracy * (0.2f + 0.8f * (phraseSim / 100f)), 0f, 100f);
+                        float calibratedPron = Math.Clamp((rawPron * 0.4f) + (phraseSim * 0.6f), 0f, 100f);
+                        float calibratedCompleteness = Math.Clamp(rawCompleteness * (phraseSim / 100f), 0f, 100f);
+                        float calibratedFluency = rawFluency;
+
+                        // Round scores for clean display
+                        calibratedAccuracy = MathF.Round(calibratedAccuracy, 1);
+                        calibratedPron = MathF.Round(calibratedPron, 1);
+                        calibratedCompleteness = MathF.Round(calibratedCompleteness, 1);
+                        calibratedFluency = MathF.Round(calibratedFluency, 1);
+
+                        // Update JSON response bestItem["PronunciationAssessment"] fields
+                        if (pronAssess is System.Text.Json.Nodes.JsonObject pronObj)
+                        {
+                            pronObj["AccuracyScore"] = calibratedAccuracy;
+                            pronObj["PronScore"] = calibratedPron;
+                            pronObj["PronunciationScore"] = calibratedPron;
+                            pronObj["CompletenessScore"] = calibratedCompleteness;
+                            pronObj["FluencyScore"] = calibratedFluency;
+                        }
 
                         if (bestItem["Words"] is System.Text.Json.Nodes.JsonArray wordsArray)
                         {
@@ -391,16 +422,31 @@ namespace GodotXR.Api.Controllers
                                 float wAcc = wAssess?["AccuracyScore"]?.GetValue<float>() ?? 0f;
                                 string? wErr = wAssess?["ErrorType"]?.ToString();
 
+                                // Calibrate word accuracy score if phrase similarity is low
+                                float calibratedWordAcc = Math.Clamp(wAcc * (0.3f + 0.7f * (phraseSim / 100f)), 0f, 100f);
+                                calibratedWordAcc = MathF.Round(calibratedWordAcc, 1);
+
+                                if (phraseSim < 40f && (wErr == "None" || string.IsNullOrEmpty(wErr)))
+                                {
+                                    wErr = "Mispronunciation";
+                                }
+
+                                if (wAssess is System.Text.Json.Nodes.JsonObject wAssessObj)
+                                {
+                                    wAssessObj["AccuracyScore"] = calibratedWordAcc;
+                                    if (wErr != null) wAssessObj["ErrorType"] = wErr;
+                                }
+
                                 var accuracyEntity = new ChildSpeechAccuracy
                                 {
                                     ChildProfileId = request.ChildProfileId,
                                     SessionId = request.SessionId,
                                     AudioChunkIndex = request.ChunkIndex,
                                     Word = wordStr,
-                                    AccuracyScore = wAcc,
-                                    FluencyScore = overallFluency,
-                                    PronunciationScore = overallPron,
-                                    CompletenessScore = overallCompleteness,
+                                    AccuracyScore = calibratedWordAcc,
+                                    FluencyScore = calibratedFluency,
+                                    PronunciationScore = calibratedPron,
+                                    CompletenessScore = calibratedCompleteness,
                                     ErrorType = wErr,
                                     CreatedAt = DateTime.UtcNow
                                 };
