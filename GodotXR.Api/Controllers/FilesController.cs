@@ -436,9 +436,15 @@ namespace GodotXR.Api.Controllers
                         var phraseWordNode = new System.Text.Json.Nodes.JsonObject
                         {
                             ["Word"] = phraseText,
+                            ["word"] = phraseText,
+                            ["AccuracyScore"] = calibratedAccuracy,
+                            ["accuracyScore"] = calibratedAccuracy,
+                            ["ErrorType"] = phraseErrorType,
+                            ["errorType"] = phraseErrorType,
                             ["PronunciationAssessment"] = new System.Text.Json.Nodes.JsonObject
                             {
                                 ["AccuracyScore"] = calibratedAccuracy,
+                                ["accuracyScore"] = calibratedAccuracy,
                                 ["ErrorType"] = phraseErrorType
                             }
                         };
