@@ -377,11 +377,26 @@ namespace GodotXR.Api.Controllers
                         float rawCompleteness = pronAssess?["CompletenessScore"]?.GetValue<float>() ?? 0f;
                         float rawAccuracy = pronAssess?["AccuracyScore"]?.GetValue<float>() ?? 0f;
 
+                        // Use phrase similarity if raw Azure scores are zero
+                        float baseAccuracy = rawAccuracy > 0f ? rawAccuracy : phraseSim;
+                        float basePron = rawPron > 0f ? rawPron : phraseSim;
+                        float baseCompleteness = rawCompleteness > 0f ? rawCompleteness : phraseSim;
+                        float baseFluency = rawFluency > 0f ? rawFluency : (phraseSim > 50f ? 100f : phraseSim);
+
                         // Calibrate overall scores based on phrase similarity match
-                        float calibratedAccuracy = Math.Clamp(rawAccuracy * (0.2f + 0.8f * (phraseSim / 100f)), 0f, 100f);
-                        float calibratedPron = Math.Clamp((rawPron * 0.4f) + (phraseSim * 0.6f), 0f, 100f);
-                        float calibratedCompleteness = Math.Clamp(rawCompleteness * (phraseSim / 100f), 0f, 100f);
-                        float calibratedFluency = rawFluency;
+                        float calibratedAccuracy = Math.Clamp(baseAccuracy * (0.2f + 0.8f * (phraseSim / 100f)), 0f, 100f);
+                        float calibratedPron = Math.Clamp((basePron * 0.4f) + (phraseSim * 0.6f), 0f, 100f);
+                        float calibratedCompleteness = Math.Clamp(baseCompleteness * (phraseSim / 100f), 0f, 100f);
+                        float calibratedFluency = Math.Clamp(baseFluency, 0f, 100f);
+
+                        // If phrase similarity is very low (e.g., silent/unclear speech or totally wrong text), force all scores to 0
+                        if (phraseSim < 5f)
+                        {
+                            calibratedAccuracy = 0f;
+                            calibratedPron = 0f;
+                            calibratedCompleteness = 0f;
+                            calibratedFluency = 0f;
+                        }
 
                         // Round scores for clean display
                         calibratedAccuracy = MathF.Round(calibratedAccuracy, 1);
@@ -393,11 +408,28 @@ namespace GodotXR.Api.Controllers
                         if (pronAssess is System.Text.Json.Nodes.JsonObject pronObj)
                         {
                             pronObj["AccuracyScore"] = calibratedAccuracy;
+                            pronObj["accuracyScore"] = calibratedAccuracy;
                             pronObj["PronScore"] = calibratedPron;
+                            pronObj["pronScore"] = calibratedPron;
                             pronObj["PronunciationScore"] = calibratedPron;
+                            pronObj["pronunciationScore"] = calibratedPron;
                             pronObj["CompletenessScore"] = calibratedCompleteness;
+                            pronObj["completenessScore"] = calibratedCompleteness;
                             pronObj["FluencyScore"] = calibratedFluency;
+                            pronObj["fluencyScore"] = calibratedFluency;
                         }
+
+                        // Also set top-level bestItem scores for direct FE access
+                        bestItem["AccuracyScore"] = calibratedAccuracy;
+                        bestItem["accuracyScore"] = calibratedAccuracy;
+                        bestItem["PronScore"] = calibratedPron;
+                        bestItem["pronScore"] = calibratedPron;
+                        bestItem["PronunciationScore"] = calibratedPron;
+                        bestItem["pronunciationScore"] = calibratedPron;
+                        bestItem["CompletenessScore"] = calibratedCompleteness;
+                        bestItem["completenessScore"] = calibratedCompleteness;
+                        bestItem["FluencyScore"] = calibratedFluency;
+                        bestItem["fluencyScore"] = calibratedFluency;
 
                         // Soft delete existing speech accuracy records for this chunk to prevent duplicate rows
                         var existingRecords = await _unitOfWork.ChildSpeechAccuracyRepository.GetByChunkAsync(
