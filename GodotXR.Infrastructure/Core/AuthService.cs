@@ -1,6 +1,8 @@
 using GodotXR.Application.DTOs.Request.Auth;
 using GodotXR.Application.DTOs.Response.Auth;
 using GodotXR.Application.Services;
+using GodotXR.Domain.Entities;
+using GodotXR.Domain.Enums;
 using GodotXR.Domain.IUnitOfWork;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +17,7 @@ namespace GodotXR.Infrastructure.Core
         private readonly IDistributedCache _cache;
         private readonly IMailService _mailService;
         private readonly IPasswordHasherService _passwordHasherService;
+        private readonly IConfiguration _configuration;
 
         public AuthService(
             IUnitOfWork unitOfWork,
@@ -26,9 +29,88 @@ namespace GodotXR.Infrastructure.Core
         {
             _unitOfWork = unitOfWork;
             _tokenService = tokenService;
+            _configuration = configuration;
             _cache = cache;
             _mailService = mailService;
             _passwordHasherService = passwordHasherService;
+        }
+
+        public async Task<(bool Succeeded, IEnumerable<string> Errors, RegisterResponse? Data)> RegisterAsync(RegisterRequest request)
+        {
+            var emailExists = await _unitOfWork.UserRepository.ExistsAsync(
+                u => u.Email == request.Email && !u.IsDeleted);
+
+            if (emailExists)
+                return (false, new[] { $"Email '{request.Email}' đã tồn tại." }, null);
+
+            var parentRole = await _unitOfWork.RoleRepository.GetFirstOrDefaultAsync(
+                r => r.RoleName == UserRole.Parent && r.IsActive);
+
+            if (parentRole == null)
+                return (false, new[] { "Role 'Parent' không tồn tại hoặc không hoạt động." }, null);
+
+            var verifyToken = Convert.ToBase64String(
+                System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
+
+            var user = new User
+            {
+                PasswordHash = _passwordHasherService.Hash(request.Password),
+                FullName = request.FullName,
+                Email = request.Email,
+                Phone = request.Phone,
+                RoleId = parentRole.Id,
+                IsActive = false,
+                IsEmailVerified = false,
+                MustChangePassword = false,
+                VerifyToken = verifyToken,
+                VerifyTokenExpiry = DateTime.UtcNow.AddHours(24)
+            };
+
+            await _unitOfWork.UserRepository.AddAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            var frontendUrl = _configuration["App:FrontendBaseUrl"] ?? "http://localhost:3000";
+            var verifyLink = $"{frontendUrl}/verify-email?token={Uri.EscapeDataString(verifyToken)}";
+
+            var subject = "Xác nhận đăng ký tài khoản - GodotXR";
+            var body = $@"
+                <div style='font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden;'>
+                    <div style='background: linear-gradient(135deg, #4CAF50, #2E7D32); padding: 24px; text-align: center; color: white;'>
+                        <h1 style='margin: 0;'>GodotXR</h1>
+                        <p style='margin-top: 8px;'>Xác nhận đăng ký tài khoản</p>
+                    </div>
+                    <div style='padding: 32px;'>
+                        <h2 style='color: #333;'>Xin chào {request.FullName},</h2>
+                        <p style='color: #555; line-height: 1.8;'>Cảm ơn bạn đã đăng ký tài khoản GodotXR. Vui lòng xác nhận email để kích hoạt tài khoản.</p>
+                        <div style='text-align: center; margin: 30px 0;'>
+                            <a href='{verifyLink}' style='display: inline-block; padding: 12px 30px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;'>Xác Nhận Email</a>
+                        </div>
+                        <p style='color: #555;'>Hoặc sao chép liên kết sau vào trình duyệt:</p>
+                        <p style='color: #555; word-break: break-all;'>{verifyLink}</p>
+                        <p style='color: #555;'>Liên kết có hiệu lực trong <strong>24 giờ</strong>.</p>
+                    </div>
+                    <div style='background-color: #f8f8f8; text-align: center; padding: 16px; font-size: 12px; color: #888;'>
+                        © {DateTime.Now.Year} GodotXR.
+                    </div>
+                </div>";
+
+            try
+            {
+                await _mailService.SendEmailAsync(request.Email, subject, body);
+            }
+            catch (Exception ex)
+            {
+                return (false, new[] { $"Gửi email xác nhận thất bại: {ex.Message}" }, null);
+            }
+
+            return (true, Enumerable.Empty<string>(), new RegisterResponse
+            {
+                UserId = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                RoleName = parentRole.RoleName.ToString(),
+                Message = "Đăng ký thành công. Vui lòng kiểm tra email để xác nhận tài khoản."
+            });
         }
 
         public async Task<(bool Succeeded, IEnumerable<string> Errors, TokenModel? Data)> LoginAsync(LoginRequest request)
@@ -67,7 +149,7 @@ namespace GodotXR.Infrastructure.Core
                     Phone = user.Phone ?? string.Empty,
                     RoleName = user.Role.RoleName.ToString(),
                     IsActive = user.IsActive,
-                    MustChangePassword = user.MustChangePassword 
+                    MustChangePassword = user.MustChangePassword
                 }
             };
 
@@ -121,7 +203,7 @@ namespace GodotXR.Infrastructure.Core
                         Phone = user.Phone ?? string.Empty,
                         RoleName = user.Role.RoleName.ToString(),
                         IsActive = user.IsActive,
-                        MustChangePassword = user.MustChangePassword 
+                        MustChangePassword = user.MustChangePassword
                     }
                 });
             }
@@ -257,7 +339,7 @@ namespace GodotXR.Infrastructure.Core
                 return (false, false, new[] { "Current password is incorrect." });
 
             user.PasswordHash = _passwordHasherService.Hash(request.NewPassword);
-            user.MustChangePassword = false; 
+            user.MustChangePassword = false;
             user.UpdatedAt = DateTime.UtcNow;
 
             await _unitOfWork.SaveChangesAsync();
