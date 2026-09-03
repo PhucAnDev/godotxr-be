@@ -28,6 +28,8 @@ namespace GodotXR.Domain.IUnitOfWork
 
         IPronunciationDetailRepository PronunciationDetailRepository { get; }
 
+        IChildSpeechAccuracyRepository ChildSpeechAccuracyRepository { get; }
+
         IEventLogRepository EventLogRepository { get; }
 
         IAnalyzeRepository AnalyzeRepository { get; }

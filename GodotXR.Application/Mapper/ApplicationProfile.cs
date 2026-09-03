@@ -16,6 +16,8 @@ using GodotXR.Application.DTOs.Response.Result;
 using GodotXR.Application.DTOs.Response.SchoolYear;
 using GodotXR.Application.DTOs.Response.Semester;
 using GodotXR.Application.DTOs.Response.User;
+using GodotXR.Application.DTOs.Request.ChildSpeechAccuracy;
+using GodotXR.Application.DTOs.Response.ChildSpeechAccuracy;
 using GodotXR.Domain.Entities;
 
 namespace GodotXR.Application.Mapper
@@ -93,6 +95,9 @@ namespace GodotXR.Application.Mapper
                 .ForMember(d => d.EventLogs, o => o.MapFrom(s => s.EventLogs));
 
             CreateMap<PronunciationDetail, PronunciationDetailResponse>();
+            
+            CreateMap<ChildSpeechAccuracy, ChildSpeechAccuracyResponse>();
+            CreateMap<CreateChildSpeechAccuracyRequest, ChildSpeechAccuracy>();
             
             CreateMap<EventLog, EventLogResponse>();
 

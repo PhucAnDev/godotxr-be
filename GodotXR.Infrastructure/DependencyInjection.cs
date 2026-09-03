@@ -68,6 +68,8 @@ namespace GodotXR.Infrastructure
             services.AddScoped<IEnrollmentService, EnrollmentService>();
             services.AddScoped<IItemAssetService, ItemAssetService>();
             services.AddScoped<ILessonSlotService, LessonSlotService>();
+            services.AddScoped<IChildSpeechAccuracyRepository, ChildSpeechAccuracyRepository>();
+            services.AddScoped<IChildSpeechAccuracyService, ChildSpeechAccuracyService>();
             services.AddScoped<IResultService, ResultService>();
             services.AddScoped<IAnalyzeService, AnalyzeService>();
 
