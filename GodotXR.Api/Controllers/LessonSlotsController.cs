@@ -29,7 +29,7 @@ namespace GodotXR.Api.Controllers
         #region LessonImages
 
         [HttpGet("api/lesson-images/{lessonId:int}")]
-        [Authorize(Roles = "Admin,Teacher")]
+        [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<LessonImageResponse>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetImages(int lessonId)
         {
@@ -43,7 +43,7 @@ namespace GodotXR.Api.Controllers
         }
 
         [HttpPost("api/lesson-images/{lessonId:int}")]
-        [Authorize(Roles = "Admin,Teacher")]
+        [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse<LessonImageResponse>), StatusCodes.Status201Created)]
         public async Task<IActionResult> UploadImage(int lessonId, [FromForm] UploadLessonImageRequest request)
         {
@@ -76,7 +76,7 @@ namespace GodotXR.Api.Controllers
         }
 
         [HttpDelete("api/lesson-images/{lessonId:int}/{imageId:int}")]
-        [Authorize(Roles = "Admin,Teacher")]
+        [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteImage(int lessonId, int imageId)
         {
@@ -102,7 +102,7 @@ namespace GodotXR.Api.Controllers
         #region LessonSlots
 
         [HttpGet("api/lesson-slots/{lessonId:int}")]
-        [Authorize(Roles = "Admin,Teacher")]
+        [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<LessonSlotResponse>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetSlots(int lessonId)
         {
@@ -116,7 +116,7 @@ namespace GodotXR.Api.Controllers
         }
 
         [HttpPost("api/lesson-slots/{lessonId:int}")]
-        [Authorize(Roles = "Admin,Teacher")]
+        [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse<LessonSlotResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> ConfigureSlot(int lessonId, [FromBody] ConfigureSlotRequest request)
         {
@@ -148,7 +148,7 @@ namespace GodotXR.Api.Controllers
         }
 
         [HttpPut("api/lesson-slots/{lessonId:int}/{id:int}")]
-        [Authorize(Roles = "Admin,Teacher")]
+        [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse<LessonSlotResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateSlot(int lessonId, int id, [FromBody] ConfigureSlotRequest request)
         {
@@ -190,7 +190,7 @@ namespace GodotXR.Api.Controllers
         }
 
         [HttpDelete("api/lesson-slots/{lessonId:int}/{id:int}")]
-        [Authorize(Roles = "Admin,Teacher")]
+        [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteSlot(int lessonId, int id)
         {
@@ -212,7 +212,7 @@ namespace GodotXR.Api.Controllers
         }
 
         [HttpPut("api/lesson-slots/{lessonId:int}/{id:int}/assign")]
-        [Authorize(Roles = "Admin,Teacher")]
+        [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse<LessonSlotResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> AssignItemToSlot(int lessonId, int id, [FromBody] AssignItemAssetRequest request)
         {

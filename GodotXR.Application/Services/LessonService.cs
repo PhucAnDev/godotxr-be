@@ -84,6 +84,8 @@ namespace GodotXR.Application.Services
                 Status = request.Status,
                 MaxScore = request.MaxScore,
                 CompletionBonusPoints = request.CompletionBonusPoints,
+                CorrectAnswerScore = request.CorrectAnswerScore,
+                IncorrectAnswerScore = request.IncorrectAnswerScore,
                 Note = request.Note,
                 CreatedAt = DateTime.UtcNow
             };
@@ -125,6 +127,8 @@ namespace GodotXR.Application.Services
             lesson.Status = request.Status;
             lesson.MaxScore = request.MaxScore;
             lesson.CompletionBonusPoints = request.CompletionBonusPoints;
+            lesson.CorrectAnswerScore = request.CorrectAnswerScore;
+            lesson.IncorrectAnswerScore = request.IncorrectAnswerScore;
             lesson.Note = request.Note;
             lesson.UpdatedAt = DateTime.UtcNow;
 

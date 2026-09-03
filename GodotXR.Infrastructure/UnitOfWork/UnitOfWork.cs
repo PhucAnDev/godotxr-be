@@ -23,6 +23,7 @@ namespace GodotXR.Infrastructure.UnitOfWork
 
         private IResultRepository? _resultRepository;
         private IPronunciationDetailRepository? _pronunciationDetailRepository;
+        private IChildSpeechAccuracyRepository? _childSpeechAccuracyRepository;
         private IEventLogRepository? _eventLogRepository;
         private IAnalyzeRepository? _analyzeRepository;
         private IReportRepository? _reportRepository;
@@ -118,6 +119,15 @@ namespace GodotXR.Infrastructure.UnitOfWork
             { 
                 _pronunciationDetailRepository ??= new PronunciationDetailRepository(_context); 
                 return _pronunciationDetailRepository; 
+            }
+        }
+
+        public IChildSpeechAccuracyRepository ChildSpeechAccuracyRepository
+        {
+            get
+            {
+                _childSpeechAccuracyRepository ??= new ChildSpeechAccuracyRepository(_context);
+                return _childSpeechAccuracyRepository;
             }
         }
 

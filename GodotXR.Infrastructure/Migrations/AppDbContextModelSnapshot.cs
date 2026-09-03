@@ -164,6 +164,79 @@ namespace GodotXR.Infrastructure.Migrations
                     b.ToTable("ChildProfiles");
                 });
 
+            modelBuilder.Entity("GodotXR.Domain.Entities.ChildSpeechAccuracy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<float>("AccuracyScore")
+                        .HasColumnType("real");
+
+                    b.Property<int?>("AudioChunkIndex")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ChildProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<float?>("CompletenessScore")
+                        .HasColumnType("real");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErrorType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<float?>("FluencyScore")
+                        .HasColumnType("real");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("LessonId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("LessonSlotId")
+                        .HasColumnType("int");
+
+                    b.Property<float?>("PronunciationScore")
+                        .HasColumnType("real");
+
+                    b.Property<int?>("ResultId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SessionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Word")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChildProfileId");
+
+                    b.HasIndex("LessonId");
+
+                    b.HasIndex("LessonSlotId");
+
+                    b.HasIndex("ResultId");
+
+                    b.ToTable("ChildSpeechAccuracies");
+                });
+
             modelBuilder.Entity("GodotXR.Domain.Entities.Classroom", b =>
                 {
                     b.Property<int>("Id")
@@ -370,6 +443,9 @@ namespace GodotXR.Infrastructure.Migrations
                     b.Property<float>("CompletionBonusPoints")
                         .HasColumnType("real");
 
+                    b.Property<float>("CorrectAnswerScore")
+                        .HasColumnType("real");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -381,6 +457,9 @@ namespace GodotXR.Infrastructure.Migrations
 
                     b.Property<int>("EstimatedDuration")
                         .HasColumnType("int");
+
+                    b.Property<float>("IncorrectAnswerScore")
+                        .HasColumnType("real");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -774,7 +853,7 @@ namespace GodotXR.Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 8, 25, 19, 18, 22, 946, DateTimeKind.Utc).AddTicks(7987),
+                            CreatedAt = new DateTime(2026, 8, 29, 21, 57, 31, 824, DateTimeKind.Utc).AddTicks(5122),
                             Description = "System Administrator",
                             IsActive = true,
                             IsDeleted = false,
@@ -783,7 +862,7 @@ namespace GodotXR.Infrastructure.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 8, 25, 19, 18, 22, 946, DateTimeKind.Utc).AddTicks(8005),
+                            CreatedAt = new DateTime(2026, 8, 29, 21, 57, 31, 824, DateTimeKind.Utc).AddTicks(5145),
                             Description = "Teacher",
                             IsActive = true,
                             IsDeleted = false,
@@ -792,7 +871,7 @@ namespace GodotXR.Infrastructure.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 8, 25, 19, 18, 22, 946, DateTimeKind.Utc).AddTicks(8009),
+                            CreatedAt = new DateTime(2026, 8, 29, 21, 57, 31, 824, DateTimeKind.Utc).AddTicks(5147),
                             Description = "Parent",
                             IsActive = true,
                             IsDeleted = false,
@@ -1034,6 +1113,38 @@ namespace GodotXR.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GodotXR.Domain.Entities.ChildSpeechAccuracy", b =>
+                {
+                    b.HasOne("GodotXR.Domain.Entities.ChildProfile", "Child")
+                        .WithMany()
+                        .HasForeignKey("ChildProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GodotXR.Domain.Entities.Lesson", "Lesson")
+                        .WithMany()
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GodotXR.Domain.Entities.LessonSlot", "LessonSlot")
+                        .WithMany()
+                        .HasForeignKey("LessonSlotId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GodotXR.Domain.Entities.Result", "Result")
+                        .WithMany()
+                        .HasForeignKey("ResultId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Child");
+
+                    b.Navigation("Lesson");
+
+                    b.Navigation("LessonSlot");
+
+                    b.Navigation("Result");
                 });
 
             modelBuilder.Entity("GodotXR.Domain.Entities.Classroom", b =>

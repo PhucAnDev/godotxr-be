@@ -1,5 +1,6 @@
 using GodotXR.Application.DTOs.External;
 using GodotXR.Application.DTOs.Response.FileUpload;
+using GodotXR.Application.Helpers;
 using GodotXR.Application.Services;
 using GodotXR.Domain.Entities;
 using GodotXR.Domain.IUnitOfWork;
@@ -356,14 +357,139 @@ namespace GodotXR.Api.Controllers
                 }
 
                 var responseString = await response.Content.ReadAsStringAsync(ct);
-                azureResult = System.Text.Json.JsonSerializer.Deserialize<AzureSpeechAssessmentResult>(
-                    responseString,
-                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error communicating with Azure: {ex.Message}");
-            }
+                var node = System.Text.Json.Nodes.JsonNode.Parse(responseString);
+                if (node != null && node["NBest"] is System.Text.Json.Nodes.JsonArray nbest && nbest.Count > 0)
+                {
+                    var bestItem = nbest[0];
+
+                    // Extract actual spoken text from request (InteractionLog) or recognized by Azure STT (e.g., "triệu kirkard.")
+                    string actualSpokenText = !string.IsNullOrWhiteSpace(request.SpokenText) && request.SpokenText != "N/A"
+                        ? request.SpokenText
+                        : (bestItem["Display"]?.ToString() ?? bestItem["Lexical"]?.ToString() ?? node["DisplayText"]?.ToString() ?? string.Empty);
+
+                    // Calculate phrase similarity score between reference text and actual spoken text
+                    float phraseSim = PhraseSimilarityHelper.CalculateSimilarity(request.ReferenceText, actualSpokenText);
+
+                    try
+                    {
+                        var pronAssess = bestItem["PronunciationAssessment"];
+                        float rawFluency = pronAssess?["FluencyScore"]?.GetValue<float>() ?? 0f;
+                        float rawPron = pronAssess?["PronScore"]?.GetValue<float>() ?? pronAssess?["PronunciationScore"]?.GetValue<float>() ?? 0f;
+                        float rawCompleteness = pronAssess?["CompletenessScore"]?.GetValue<float>() ?? 0f;
+                        float rawAccuracy = pronAssess?["AccuracyScore"]?.GetValue<float>() ?? 0f;
+
+                        // Use phrase similarity if raw Azure scores are zero
+                        float baseAccuracy = rawAccuracy > 0f ? rawAccuracy : phraseSim;
+                        float basePron = rawPron > 0f ? rawPron : phraseSim;
+                        float baseCompleteness = rawCompleteness > 0f ? rawCompleteness : phraseSim;
+                        float baseFluency = rawFluency > 0f ? rawFluency : (phraseSim > 50f ? 100f : phraseSim);
+
+                        // Calibrate overall scores based on phrase similarity match
+                        float calibratedAccuracy = Math.Clamp(baseAccuracy * (0.2f + 0.8f * (phraseSim / 100f)), 0f, 100f);
+                        float calibratedPron = Math.Clamp((basePron * 0.4f) + (phraseSim * 0.6f), 0f, 100f);
+                        float calibratedCompleteness = Math.Clamp(baseCompleteness * (phraseSim / 100f), 0f, 100f);
+                        float calibratedFluency = Math.Clamp(baseFluency, 0f, 100f);
+
+                        // If phrase similarity is very low (e.g., silent/unclear speech or totally wrong text), force all scores to 0
+                        if (phraseSim < 5f)
+                        {
+                            calibratedAccuracy = 0f;
+                            calibratedPron = 0f;
+                            calibratedCompleteness = 0f;
+                            calibratedFluency = 0f;
+                        }
+
+                        // Round scores for clean display
+                        calibratedAccuracy = MathF.Round(calibratedAccuracy, 1);
+                        calibratedPron = MathF.Round(calibratedPron, 1);
+                        calibratedCompleteness = MathF.Round(calibratedCompleteness, 1);
+                        calibratedFluency = MathF.Round(calibratedFluency, 1);
+
+                        // Update JSON response bestItem["PronunciationAssessment"] fields
+                        if (pronAssess is System.Text.Json.Nodes.JsonObject pronObj)
+                        {
+                            pronObj["AccuracyScore"] = calibratedAccuracy;
+                            pronObj["accuracyScore"] = calibratedAccuracy;
+                            pronObj["PronScore"] = calibratedPron;
+                            pronObj["pronScore"] = calibratedPron;
+                            pronObj["PronunciationScore"] = calibratedPron;
+                            pronObj["pronunciationScore"] = calibratedPron;
+                            pronObj["CompletenessScore"] = calibratedCompleteness;
+                            pronObj["completenessScore"] = calibratedCompleteness;
+                            pronObj["FluencyScore"] = calibratedFluency;
+                            pronObj["fluencyScore"] = calibratedFluency;
+                        }
+
+                        // Also set top-level bestItem scores for direct FE access
+                        bestItem["AccuracyScore"] = calibratedAccuracy;
+                        bestItem["accuracyScore"] = calibratedAccuracy;
+                        bestItem["PronScore"] = calibratedPron;
+                        bestItem["pronScore"] = calibratedPron;
+                        bestItem["PronunciationScore"] = calibratedPron;
+                        bestItem["pronunciationScore"] = calibratedPron;
+                        bestItem["CompletenessScore"] = calibratedCompleteness;
+                        bestItem["completenessScore"] = calibratedCompleteness;
+                        bestItem["FluencyScore"] = calibratedFluency;
+                        bestItem["fluencyScore"] = calibratedFluency;
+
+                        // Soft delete existing speech accuracy records for this chunk to prevent duplicate rows
+                        var existingRecords = await _unitOfWork.ChildSpeechAccuracyRepository.GetByChunkAsync(
+                            request.ChildProfileId,
+                            request.SessionId,
+                            request.ChunkIndex);
+
+                        foreach (var existing in existingRecords)
+                        {
+                            existing.IsDeleted = true;
+                            existing.DeletedAt = DateTime.UtcNow;
+                        }
+
+                        string phraseText = string.IsNullOrWhiteSpace(request.ReferenceText) ? "N/A" : request.ReferenceText.Trim();
+                        string phraseErrorType = calibratedAccuracy < 50f ? "Mispronunciation" : "None";
+
+                        // Save phrase-level entity to ChildSpeechAccuracies DB table
+                        var phraseEntity = new ChildSpeechAccuracy
+                        {
+                            ChildProfileId = request.ChildProfileId,
+                            SessionId = request.SessionId,
+                            AudioChunkIndex = request.ChunkIndex,
+                            Word = phraseText,
+                            AccuracyScore = calibratedAccuracy,
+                            FluencyScore = calibratedFluency,
+                            PronunciationScore = calibratedPron,
+                            CompletenessScore = calibratedCompleteness,
+                            ErrorType = phraseErrorType,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        await _unitOfWork.ChildSpeechAccuracyRepository.AddAsync(phraseEntity);
+                        await _unitOfWork.SaveChangesAsync();
+
+                        // Set response bestItem["Words"] to present the phrase item
+                        var phraseWordNode = new System.Text.Json.Nodes.JsonObject
+                        {
+                            ["Word"] = phraseText,
+                            ["word"] = phraseText,
+                            ["AccuracyScore"] = calibratedAccuracy,
+                            ["accuracyScore"] = calibratedAccuracy,
+                            ["ErrorType"] = phraseErrorType,
+                            ["errorType"] = phraseErrorType,
+                            ["PronunciationAssessment"] = new System.Text.Json.Nodes.JsonObject
+                            {
+                                ["AccuracyScore"] = calibratedAccuracy,
+                                ["accuracyScore"] = calibratedAccuracy,
+                                ["ErrorType"] = phraseErrorType
+                            }
+                        };
+                        bestItem["Words"] = new System.Text.Json.Nodes.JsonArray { phraseWordNode };
+                    }
+                    catch (Exception)
+                    {
+                        // Ignore DB save errors so API assessment response is not interrupted
+                    }
+
+                    return Ok(bestItem);
+                }
 
             if (azureResult?.RecognitionStatus != "Success" || azureResult.NBest.Count == 0)
             {
@@ -556,6 +682,8 @@ namespace GodotXR.Api.Controllers
 
         [Required]
         public string ReferenceText { get; set; } = null!;
+
+        public string? SpokenText { get; set; }
     }
 
     public class AssessChunkResponse

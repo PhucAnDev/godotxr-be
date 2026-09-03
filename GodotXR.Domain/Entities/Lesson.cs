@@ -25,6 +25,10 @@ namespace GodotXR.Domain.Entities
 
         public float CompletionBonusPoints { get; set; } = 20f;
 
+        public float CorrectAnswerScore { get; set; } = 10f;
+
+        public float IncorrectAnswerScore { get; set; } = 0f;
+
         public string? Note { get; set; }
 
         public Program Program { get; set; } = null!;

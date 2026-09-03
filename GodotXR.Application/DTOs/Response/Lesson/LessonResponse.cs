@@ -12,6 +12,8 @@ namespace GodotXR.Application.DTOs.Response.Lesson
         public string Status { get; set; } = string.Empty;
         public float MaxScore { get; set; }
         public float CompletionBonusPoints { get; set; }
+        public float CorrectAnswerScore { get; set; }
+        public float IncorrectAnswerScore { get; set; }
         public string? Note { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

@@ -9,5 +9,7 @@ namespace GodotXR.Application.DTOs.Response.Program
         public int EstimatedDuration { get; set; }
         public string Status { get; set; } = string.Empty;
         public float MaxScore { get; set; }
+        public float CorrectAnswerScore { get; set; }
+        public float IncorrectAnswerScore { get; set; }
     }
 }
