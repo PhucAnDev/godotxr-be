@@ -347,7 +347,6 @@ namespace GodotXR.Api.Controllers
 
             var url = $"https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language={language}";
 
-            AzureSpeechAssessmentResult? azureResult;
             try
             {
                 var response = await client.PostAsync(url, content, ct);
@@ -491,70 +490,12 @@ namespace GodotXR.Api.Controllers
                     return Ok(bestItem);
                 }
 
-            if (azureResult?.RecognitionStatus != "Success" || azureResult.NBest.Count == 0)
-            {
-                return BadRequest($"Azure could not recognize speech. Status: {azureResult?.RecognitionStatus}");
+                return Ok(node);
             }
-
-            var best = azureResult.NBest[0];
-            var scores = best.PronunciationAssessment ?? new AzurePronunciationScore();
-
-            // Cập nhật điểm tổng vào Result (tìm theo SessionId)
-            var dbResult = await _unitOfWork.ResultRepository.GetBySessionIdAsync(request.SessionId);
-            var issues = new List<PhonemeIssue>();
-
-            if (dbResult != null)
+            catch (Exception ex)
             {
-                dbResult.Score = (float)scores.PronScore;
-                dbResult.CorrectCount = best.Words.Count(w => (w.PronunciationAssessment?.ErrorType ?? "None") == "None");
-                dbResult.ErrorCount = best.Words.Count(w => (w.PronunciationAssessment?.ErrorType ?? "None") != "None");
-
-                _unitOfWork.ResultRepository.Update(dbResult);
-
-                // Ghi chi tiết từng phoneme có vấn đề vào PronunciationDetail
-                const double accuracyThreshold = 70.0; // TODO: chốt lại ngưỡng này với leader/chuyên gia
-                foreach (var word in best.Words)
-                {
-                    var wordErrorType = word.PronunciationAssessment?.ErrorType ?? "None";
-                    foreach (var phoneme in word.Phonemes)
-                    {
-                        var phonemeAccuracy = phoneme.PronunciationAssessment?.AccuracyScore ?? 0;
-                        if (phonemeAccuracy < accuracyThreshold || wordErrorType != "None")
-                        {
-                            var detail = new PronunciationDetail
-                            {
-                                ResultId = dbResult.Id,
-                                ExpectedPhoneme = phoneme.Phoneme,
-                                ActualPhoneme = phoneme.Phoneme, // Azure không trả phoneme "thực tế nói ra", chỉ chấm điểm phoneme kỳ vọng
-                                AccuracyScore = (int)phonemeAccuracy,
-                                IssueType = wordErrorType != "None" ? wordErrorType : "LowAccuracy"
-                            };
-                            await _unitOfWork.PronunciationDetailRepository.AddAsync(detail);
-
-                            issues.Add(new PhonemeIssue
-                            {
-                                Word = word.Word,
-                                Phoneme = phoneme.Phoneme,
-                                AccuracyScore = phonemeAccuracy,
-                                ErrorType = wordErrorType
-                            });
-                        }
-                    }
-                }
-
-                await _unitOfWork.SaveChangesAsync();
+                return StatusCode(500, $"Error communicating with Azure: {ex.Message}");
             }
-
-            return Ok(new AssessChunkResponse
-            {
-                ChunkIndex = request.ChunkIndex,
-                RecognizedText = azureResult.DisplayText ?? best.Display ?? string.Empty,
-                AccuracyScore = scores.AccuracyScore,
-                FluencyScore = scores.FluencyScore,
-                CompletenessScore = scores.CompletenessScore,
-                PronScore = scores.PronScore,
-                Issues = issues
-            });
         }
 
         [HttpGet("assets/{assetId:int}/model")]
