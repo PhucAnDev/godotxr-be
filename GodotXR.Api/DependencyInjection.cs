@@ -12,12 +12,7 @@ namespace GodotXR.Api
                 options.AddPolicy("AllowFrontend",
                     policy =>
                     {
-                        policy.WithOrigins(
-                              "http://localhost:3000",
-                              "https://godotxr-h-tr-ng-n-ng-vr-517269026170.asia-southeast1.run.app",
-                              "https://godotxr-three.vercel.app",
-                              "https://godotxr.vercel.app"
-                          )
+                        policy.SetIsOriginAllowed(_ => true)
                               .AllowAnyHeader()
                               .AllowAnyMethod()
                               .AllowCredentials();
