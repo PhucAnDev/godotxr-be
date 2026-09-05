@@ -265,11 +265,8 @@ namespace GodotXR.Application.Services
         }
         public async Task<IEnumerable<EnrollmentResponse>> GetEnrollmentsByChildIdAsync(int childId)
         {
-            var all = (await _unitOfWork.EnrollmentRepository.GetAllWithDetailsAsync())
-                .Where(e => e.ChildId == childId && !e.IsDeleted)
-                .ToList();
-
-            return _mapper.Map<List<EnrollmentResponse>>(all);
+            var enrollments = await _unitOfWork.EnrollmentRepository.GetByChildIdAsync(childId);
+            return _mapper.Map<List<EnrollmentResponse>>(enrollments);
         }
     }
 }
