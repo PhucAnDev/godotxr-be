@@ -1,4 +1,4 @@
-﻿namespace GodotXR.Application.DTOs.Response.Enrollment
+namespace GodotXR.Application.DTOs.Response.Enrollment
 {
     public class EnrollmentResponse
     {
@@ -6,6 +6,7 @@
         public int ChildId { get; set; }
         public string ChildFullName { get; set; } = string.Empty;
         public string ChildLearningLevel { get; set; } = string.Empty;
+        public string? ChildType { get; set; }
         public int ClassId { get; set; }
         public string ClassName { get; set; } = string.Empty;
         public DateTime EnrollmentDate { get; set; }

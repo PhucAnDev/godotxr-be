@@ -1,3 +1,4 @@
+using GodotXR.Application.DTOs.External;
 using GodotXR.Application.DTOs.Response.FileUpload;
 using GodotXR.Application.Helpers;
 using GodotXR.Application.Services;
@@ -351,10 +352,7 @@ namespace GodotXR.Api.Controllers
                 var response = await client.PostAsync(url, content, ct);
                 if (!response.IsSuccessStatusCode)
                 {
-                    var loadedKeyInfo = string.IsNullOrEmpty(subKey) 
-                        ? "null/empty" 
-                        : $"Length: {subKey.Length}, Start: {subKey[..Math.Min(4, subKey.Length)]}, End: {subKey[Math.Max(0, subKey.Length - 4)..]}";
-                    return BadRequest($"Azure Speech API error: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)} | Key Info: {loadedKeyInfo} | Region: {region}");
+                    return BadRequest($"Azure Speech API error: {response.StatusCode} - {await response.Content.ReadAsStringAsync(ct)}");
                 }
 
                 var responseString = await response.Content.ReadAsStringAsync(ct);
@@ -627,5 +625,24 @@ namespace GodotXR.Api.Controllers
         public string ReferenceText { get; set; } = null!;
 
         public string? SpokenText { get; set; }
+    }
+
+    public class AssessChunkResponse
+    {
+        public int ChunkIndex { get; set; }
+        public string RecognizedText { get; set; } = string.Empty;
+        public double AccuracyScore { get; set; }
+        public double FluencyScore { get; set; }
+        public double CompletenessScore { get; set; }
+        public double PronScore { get; set; }
+        public List<PhonemeIssue> Issues { get; set; } = new();
+    }
+
+    public class PhonemeIssue
+    {
+        public string Word { get; set; } = string.Empty;
+        public string Phoneme { get; set; } = string.Empty;
+        public double AccuracyScore { get; set; }
+        public string ErrorType { get; set; } = "None";
     }
 }

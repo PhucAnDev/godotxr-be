@@ -32,6 +32,7 @@ namespace GodotXR.Infrastructure.Core
                 message.Body = bodyBuilder.ToMessageBody();
 
                 using var client = new SmtpClient();
+                client.ServerCertificateValidationCallback = (s, c, h, e) => true;
                 await client.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
                 await client.AuthenticateAsync(_options.FromEmail, _options.ApiKey);
                 await client.SendAsync(message);

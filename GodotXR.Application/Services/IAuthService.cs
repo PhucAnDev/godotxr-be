@@ -11,6 +11,7 @@ namespace GodotXR.Application.Services
         Task<(bool Succeeded, bool NotFound, IEnumerable<string> Errors)> VerifyOtpAsync(string email, string otp);
         Task<(bool Succeeded, bool NotFound, IEnumerable<string> Errors)> ResetPasswordAsync(ResetPasswordRequest request);
         Task<(bool Succeeded, bool NotFound, IEnumerable<string> Errors)> ChangePasswordAsync(ChangePasswordRequest request);
-        Task<(bool Succeeded, IEnumerable<string> Errors)> VerifyEmailAsync(string token); 
+        Task<(bool Succeeded, IEnumerable<string> Errors)> VerifyEmailAsync(string token);
+        Task<(bool Succeeded, IEnumerable<string> Errors, RegisterResponse? Data)> RegisterAsync(RegisterRequest request);
     }
 }
