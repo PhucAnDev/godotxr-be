@@ -1,4 +1,4 @@
-﻿using GodotXR.Domain.Entities;
+using GodotXR.Domain.Entities;
 using GodotXR.Domain.IRepositories;
 using GodotXR.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +41,8 @@ namespace GodotXR.Infrastructure.Repositories
         public async Task<IEnumerable<Enrollment>> GetByChildIdAsync(int childId)
         {
             return await _context.Enrollments
+                .Include(e => e.Child)
+                .Include(e => e.Classroom)
                 .Where(e => e.ChildId == childId && !e.IsDeleted)
                 .ToListAsync();
         }

@@ -87,6 +87,7 @@ namespace GodotXR.Application.Mapper
             CreateMap<Enrollment, EnrollmentResponse>()
                 .ForMember(dest => dest.ChildFullName, opt => opt.MapFrom(src => src.Child.FullName))
                 .ForMember(dest => dest.ChildLearningLevel, opt => opt.MapFrom(src => src.Child.LearningLevel))
+                .ForMember(dest => dest.ChildType, opt => opt.MapFrom(src => src.Child.ChildType))
                 .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Classroom.ClassName));
 
             CreateMap<Result, ResultResponse>()
