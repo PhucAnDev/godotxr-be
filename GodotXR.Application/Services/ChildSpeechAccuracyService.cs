@@ -43,6 +43,20 @@ namespace GodotXR.Application.Services
 
         public async Task<ChildSpeechAccuracyResponse> CreateAsync(CreateChildSpeechAccuracyRequest request)
         {
+            if (request.AudioChunkIndex.HasValue && !string.IsNullOrWhiteSpace(request.SessionId))
+            {
+                var existingRecords = await _unitOfWork.ChildSpeechAccuracyRepository.GetByChunkAsync(
+                    request.ChildProfileId,
+                    request.SessionId,
+                    request.AudioChunkIndex.Value);
+
+                foreach (var existing in existingRecords)
+                {
+                    existing.IsDeleted = true;
+                    existing.DeletedAt = DateTime.UtcNow;
+                }
+            }
+
             var entity = _mapper.Map<ChildSpeechAccuracy>(request);
             await _unitOfWork.ChildSpeechAccuracyRepository.AddAsync(entity);
             await _unitOfWork.SaveChangesAsync();
