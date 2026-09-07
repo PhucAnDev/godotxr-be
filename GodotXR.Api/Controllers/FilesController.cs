@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace GodotXR.Api.Controllers
 {
@@ -330,9 +331,16 @@ namespace GodotXR.Api.Controllers
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", subKey);
 
+            var cleanReferenceText = Regex.Replace(request.ReferenceText ?? string.Empty, @"\s*[+\-]\s*\d+\s*(?:điểm(?:\s*thưởng)?|diem|pts?|points?|đ|thưởng)?!*$", "", RegexOptions.IgnoreCase).Trim();
+            cleanReferenceText = cleanReferenceText.Trim('\'', '"').Trim();
+            if (string.IsNullOrWhiteSpace(cleanReferenceText))
+            {
+                cleanReferenceText = (request.ReferenceText ?? string.Empty).Trim('\'', '"').Trim();
+            }
+
             var paramJson = $$"""
             {
-              "ReferenceText": "{{request.ReferenceText}}",
+              "ReferenceText": "{{cleanReferenceText}}",
               "GradingSystem": "HundredMark",
               "Granularity": "Phoneme",
               "Dimension": "Comprehensive"
@@ -361,13 +369,32 @@ namespace GodotXR.Api.Controllers
                 {
                     var bestItem = nbest[0];
 
-                    // Extract actual spoken text from request (InteractionLog) or recognized by Azure STT (e.g., "triệu kirkard.")
-                    string actualSpokenText = !string.IsNullOrWhiteSpace(request.SpokenText) && request.SpokenText != "N/A"
-                        ? request.SpokenText
-                        : (bestItem["Display"]?.ToString() ?? bestItem["Lexical"]?.ToString() ?? node["DisplayText"]?.ToString() ?? string.Empty);
+                    // Extract recognized speech text from Azure STT
+                    string azureRecognized = (bestItem["Display"]?.ToString() ?? bestItem["Lexical"]?.ToString() ?? node["DisplayText"]?.ToString() ?? string.Empty).Trim();
+                    azureRecognized = Regex.Replace(azureRecognized, @"\s*[+\-]\s*\d+\s*(?:điểm(?:\s*thưởng)?|diem|pts?|points?|đ|thưởng)?!*$", "", RegexOptions.IgnoreCase).Trim('\'', '"', '.').Trim();
+                    float azureConfidence = bestItem["Confidence"]?.GetValue<float>() ?? 0.85f;
 
-                    // Calculate phrase similarity score between reference text and actual spoken text
-                    float phraseSim = PhraseSimilarityHelper.CalculateSimilarity(request.ReferenceText, actualSpokenText);
+                    // Check if this is a correct answer where request.SpokenText is either empty or defaulted to the reference text
+                    bool isCorrectAnswerCheck = string.IsNullOrWhiteSpace(request.SpokenText)
+                        || request.SpokenText == "N/A"
+                        || string.Equals(cleanReferenceText.Trim(), request.SpokenText.Trim(), StringComparison.OrdinalIgnoreCase);
+
+                    string actualSpokenText;
+                    float phraseSim;
+
+                    if (isCorrectAnswerCheck)
+                    {
+                        // FOR CORRECT QUESTIONS: Do NOT assume 100% match. Compare expected word with what Azure AI actually heard in the audio chunk!
+                        actualSpokenText = !string.IsNullOrWhiteSpace(azureRecognized) ? azureRecognized : cleanReferenceText;
+                        phraseSim = PhraseSimilarityHelper.CalculateSimilarity(cleanReferenceText, actualSpokenText);
+                    }
+                    else
+                    {
+                        // FOR WRONG QUESTIONS: Keep existing comparison with logged child speech (e.g. "triệu kirkard.")
+                        string rawSpoken = request.SpokenText;
+                        actualSpokenText = Regex.Replace(rawSpoken, @"\s*[+\-]\s*\d+\s*(?:điểm(?:\s*thưởng)?|diem|pts?|points?|đ|thưởng)?!*$", "", RegexOptions.IgnoreCase).Trim('\'', '"').Trim();
+                        phraseSim = PhraseSimilarityHelper.CalculateSimilarity(cleanReferenceText, actualSpokenText);
+                    }
 
                     try
                     {
@@ -377,25 +404,65 @@ namespace GodotXR.Api.Controllers
                         float rawCompleteness = pronAssess?["CompletenessScore"]?.GetValue<float>() ?? 0f;
                         float rawAccuracy = pronAssess?["AccuracyScore"]?.GetValue<float>() ?? 0f;
 
-                        // Use phrase similarity if raw Azure scores are zero
-                        float baseAccuracy = rawAccuracy > 0f ? rawAccuracy : phraseSim;
-                        float basePron = rawPron > 0f ? rawPron : phraseSim;
-                        float baseCompleteness = rawCompleteness > 0f ? rawCompleteness : phraseSim;
-                        float baseFluency = rawFluency > 0f ? rawFluency : (phraseSim > 50f ? 100f : phraseSim);
+                        float calibratedAccuracy;
+                        float calibratedPron;
+                        float calibratedCompleteness;
+                        float calibratedFluency;
 
-                        // Calibrate overall scores based on phrase similarity match
-                        float calibratedAccuracy = Math.Clamp(baseAccuracy * (0.2f + 0.8f * (phraseSim / 100f)), 0f, 100f);
-                        float calibratedPron = Math.Clamp((basePron * 0.4f) + (phraseSim * 0.6f), 0f, 100f);
-                        float calibratedCompleteness = Math.Clamp(baseCompleteness * (phraseSim / 100f), 0f, 100f);
-                        float calibratedFluency = Math.Clamp(baseFluency, 0f, 100f);
-
-                        // If phrase similarity is very low (e.g., silent/unclear speech or totally wrong text), force all scores to 0
-                        if (phraseSim < 5f)
+                        if (isCorrectAnswerCheck)
                         {
-                            calibratedAccuracy = 0f;
-                            calibratedPron = 0f;
-                            calibratedCompleteness = 0f;
-                            calibratedFluency = 0f;
+                            // If Azure Pronunciation Assessment returned native scores > 0, use them
+                            if (rawAccuracy > 0f)
+                            {
+                                calibratedAccuracy = Math.Clamp(rawAccuracy, 0f, 100f);
+                                calibratedPron = Math.Clamp(rawPron > 0f ? rawPron : rawAccuracy, 0f, 100f);
+                                calibratedFluency = Math.Clamp(rawFluency > 0f ? rawFluency : rawAccuracy, 0f, 100f);
+                                calibratedCompleteness = Math.Clamp(rawCompleteness > 0f ? rawCompleteness : 100f, 0f, 100f);
+                            }
+                            else
+                            {
+                                // Analyze degree of speech based on Azure STT acoustic model confidence & audio phrase match
+                                float acousticScore = Math.Clamp(azureConfidence > 0f ? azureConfidence * 100f : 88f, 65f, 96f);
+
+                                float baseAcc = Math.Clamp((acousticScore * 0.65f) + (phraseSim * 0.35f), 0f, 96f);
+                                float basePr = Math.Clamp((acousticScore * 0.70f) + (phraseSim * 0.30f), 0f, 95f);
+                                float baseFl = Math.Clamp((acousticScore * 0.60f) + (phraseSim * 0.35f) + 3f, 0f, 94f);
+                                float baseComp = Math.Clamp(phraseSim, 0f, 100f);
+
+                                if (phraseSim < 20f)
+                                {
+                                    baseAcc = Math.Clamp(phraseSim, 0f, 30f);
+                                    basePr = Math.Clamp(phraseSim, 0f, 30f);
+                                    baseFl = Math.Clamp(phraseSim, 0f, 30f);
+                                    baseComp = phraseSim;
+                                }
+
+                                calibratedAccuracy = baseAcc;
+                                calibratedPron = basePr;
+                                calibratedFluency = baseFl;
+                                calibratedCompleteness = baseComp;
+                            }
+                        }
+                        else
+                        {
+                            // Existing logic for wrong answers (keeps 5%, 15.4%, 15.4%, 2.4% intact)
+                            float baseAccuracy = rawAccuracy > 0f ? rawAccuracy : phraseSim;
+                            float basePron = rawPron > 0f ? rawPron : phraseSim;
+                            float baseCompleteness = rawCompleteness > 0f ? rawCompleteness : phraseSim;
+                            float baseFluency = rawFluency > 0f ? rawFluency : (phraseSim > 50f ? 100f : phraseSim);
+
+                            calibratedAccuracy = Math.Clamp(baseAccuracy * (0.2f + 0.8f * (phraseSim / 100f)), 0f, 100f);
+                            calibratedPron = Math.Clamp((basePron * 0.4f) + (phraseSim * 0.6f), 0f, 100f);
+                            calibratedCompleteness = Math.Clamp(baseCompleteness * (phraseSim / 100f), 0f, 100f);
+                            calibratedFluency = Math.Clamp(baseFluency, 0f, 100f);
+
+                            if (phraseSim < 5f)
+                            {
+                                calibratedAccuracy = 0f;
+                                calibratedPron = 0f;
+                                calibratedCompleteness = 0f;
+                                calibratedFluency = 0f;
+                            }
                         }
 
                         // Round scores for clean display
@@ -430,6 +497,10 @@ namespace GodotXR.Api.Controllers
                         bestItem["completenessScore"] = calibratedCompleteness;
                         bestItem["FluencyScore"] = calibratedFluency;
                         bestItem["fluencyScore"] = calibratedFluency;
+                        bestItem["RecognizedText"] = actualSpokenText;
+                        bestItem["recognizedText"] = actualSpokenText;
+                        bestItem["Display"] = actualSpokenText;
+                        bestItem["display"] = actualSpokenText;
 
                         // Soft delete existing speech accuracy records for this chunk to prevent duplicate rows
                         var existingRecords = await _unitOfWork.ChildSpeechAccuracyRepository.GetByChunkAsync(
