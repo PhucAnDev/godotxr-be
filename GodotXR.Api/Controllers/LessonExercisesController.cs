@@ -245,37 +245,6 @@ namespace GodotXR.Api.Controllers
             }
         }
 
-        [HttpGet("api/lessons/{lessonId:int}/vr-config")]
-        [HttpGet("api/lessons/{lessonId:int}/client-config")]
-        [AllowAnonymous]
-        [ProducesResponseType(typeof(ApiResponse<IEnumerable<ClientConfigSlotResponse>>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetClientConfig(int lessonId)
-        {
-            var config = await _lessonSlotService.GetClientConfigAsync(lessonId);
-            
-            var clientConfig = config.Select(slot => new ClientConfigSlotResponse
-            {
-                Id = slot.Id,
-                LessonId = slot.LessonId,
-                SlotName = slot.SlotName,
-                CorrectPoints = slot.CorrectPoints,
-                WrongPoints = slot.WrongPoints,
-                ItemAssetId = slot.ItemAssetId,
-                ItemAsset = slot.ItemAsset != null ? new ClientConfigAssetResponse
-                {
-                    Id = slot.ItemAsset.Id,
-                    ItemName = slot.ItemAsset.Name
-                } : null
-            });
-
-            return Ok(new ApiResponse<IEnumerable<ClientConfigSlotResponse>>
-            {
-                Success = true,
-                Message = "Get VR client config successfully.",
-                Data = clientConfig
-            });
-        }
-
         #endregion
     }
 }
