@@ -8,44 +8,44 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GodotXR.Api.Controllers
 {
-
     [ApiController]
     [Authorize]
-    public class LessonSlotsController : ControllerBase
+    [Tags("LessonExercises")]
+    public class LessonExercisesController : ControllerBase
     {
         private readonly ILessonSlotService _lessonSlotService;
 
-        public LessonSlotsController(ILessonSlotService lessonSlotService)
+        public LessonExercisesController(ILessonSlotService lessonSlotService)
         {
             _lessonSlotService = lessonSlotService;
         }
 
-        #region LessonImages
+        #region Lesson Scenes (Bối cảnh / Góc nhìn không gian bài học)
 
-        [HttpGet("api/lesson-images/{lessonId:int}")]
+        [HttpGet("api/lessons/{lessonId:int}/scenes")]
         [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<LessonImageResponse>>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetImages(int lessonId)
+        public async Task<IActionResult> GetScenes(int lessonId)
         {
             var images = await _lessonSlotService.GetImagesByLessonIdAsync(lessonId);
             return Ok(new ApiResponse<IEnumerable<LessonImageResponse>>
             {
                 Success = true,
-                Message = "Get lesson images successfully.",
+                Message = "Get lesson scenes successfully.",
                 Data = images
             });
         }
 
-        [HttpPost("api/lesson-images/{lessonId:int}")]
+        [HttpPost("api/lessons/{lessonId:int}/scenes")]
         [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse<LessonImageResponse>), StatusCodes.Status201Created)]
-        public async Task<IActionResult> UploadImage(int lessonId, [FromForm] UploadLessonImageRequest request)
+        public async Task<IActionResult> UploadScene(int lessonId, [FromForm] UploadLessonImageRequest request)
         {
             using var stream = request.ImageFile.OpenReadStream();
             try
@@ -61,7 +61,7 @@ namespace GodotXR.Api.Controllers
                 return Created("", new ApiResponse<LessonImageResponse>
                 {
                     Success = true,
-                    Message = "Upload lesson image successfully.",
+                    Message = "Upload lesson scene successfully.",
                     Data = result
                 });
             }
@@ -75,50 +75,50 @@ namespace GodotXR.Api.Controllers
             }
         }
 
-        [HttpDelete("api/lesson-images/{lessonId:int}/{imageId:int}")]
+        [HttpDelete("api/lessons/{lessonId:int}/scenes/{sceneId:int}")]
         [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> DeleteImage(int lessonId, int imageId)
+        public async Task<IActionResult> DeleteScene(int lessonId, int sceneId)
         {
-            var succeeded = await _lessonSlotService.DeleteImageAsync(lessonId, imageId);
+            var succeeded = await _lessonSlotService.DeleteImageAsync(lessonId, sceneId);
             if (!succeeded)
             {
                 return NotFound(new ApiResponse
                 {
                     Success = false,
-                    Message = "Lesson image not found."
+                    Message = "Lesson scene not found."
                 });
             }
 
             return Ok(new ApiResponse
             {
                 Success = true,
-                Message = "Lesson image deleted successfully."
+                Message = "Lesson scene deleted successfully."
             });
         }
 
         #endregion
 
-        #region LessonSlots
+        #region Lesson Exercises (Bài tập / Nhiệm vụ luyện tập tương tác)
 
-        [HttpGet("api/lesson-slots/{lessonId:int}")]
+        [HttpGet("api/lessons/{lessonId:int}/exercises")]
         [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<LessonSlotResponse>>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetSlots(int lessonId)
+        public async Task<IActionResult> GetExercises(int lessonId)
         {
             var slots = await _lessonSlotService.GetSlotsByLessonIdAsync(lessonId);
             return Ok(new ApiResponse<IEnumerable<LessonSlotResponse>>
             {
                 Success = true,
-                Message = "Get lesson slots successfully.",
+                Message = "Get lesson exercises successfully.",
                 Data = slots
             });
         }
 
-        [HttpPost("api/lesson-slots/{lessonId:int}")]
+        [HttpPost("api/lessons/{lessonId:int}/exercises")]
         [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse<LessonSlotResponse>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> ConfigureSlot(int lessonId, [FromBody] ConfigureSlotRequest request)
+        public async Task<IActionResult> ConfigureExercise(int lessonId, [FromBody] ConfigureSlotRequest request)
         {
             try
             {
@@ -133,7 +133,7 @@ namespace GodotXR.Api.Controllers
                 return Ok(new ApiResponse<LessonSlotResponse>
                 {
                     Success = true,
-                    Message = "Configure slot successfully.",
+                    Message = "Configure exercise successfully.",
                     Data = result
                 });
             }
@@ -147,10 +147,10 @@ namespace GodotXR.Api.Controllers
             }
         }
 
-        [HttpPut("api/lesson-slots/{lessonId:int}/{id:int}")]
+        [HttpPut("api/lessons/{lessonId:int}/exercises/{id:int}")]
         [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse<LessonSlotResponse>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> UpdateSlot(int lessonId, int id, [FromBody] ConfigureSlotRequest request)
+        public async Task<IActionResult> UpdateExercise(int lessonId, int id, [FromBody] ConfigureSlotRequest request)
         {
             try
             {
@@ -168,14 +168,14 @@ namespace GodotXR.Api.Controllers
                     return NotFound(new ApiResponse<LessonSlotResponse>
                     {
                         Success = false,
-                        Message = "Vị trí không tồn tại trong bài học này."
+                        Message = "Bài tập không tồn tại trong bài học này."
                     });
                 }
 
                 return Ok(new ApiResponse<LessonSlotResponse>
                 {
                     Success = true,
-                    Message = "Cập nhật vị trí thành công.",
+                    Message = "Cập nhật bài tập thành công.",
                     Data = result
                 });
             }
@@ -189,10 +189,10 @@ namespace GodotXR.Api.Controllers
             }
         }
 
-        [HttpDelete("api/lesson-slots/{lessonId:int}/{id:int}")]
+        [HttpDelete("api/lessons/{lessonId:int}/exercises/{id:int}")]
         [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> DeleteSlot(int lessonId, int id)
+        public async Task<IActionResult> DeleteExercise(int lessonId, int id)
         {
             var succeeded = await _lessonSlotService.DeleteSlotAsync(lessonId, id);
             if (!succeeded)
@@ -200,21 +200,21 @@ namespace GodotXR.Api.Controllers
                 return NotFound(new ApiResponse
                 {
                     Success = false,
-                    Message = "Vị trí không tồn tại hoặc đã bị xóa."
+                    Message = "Bài tập không tồn tại hoặc đã bị xóa."
                 });
             }
 
             return Ok(new ApiResponse
             {
                 Success = true,
-                Message = "Xóa vị trí thành công."
+                Message = "Xóa bài tập thành công."
             });
         }
 
-        [HttpPut("api/lesson-slots/{lessonId:int}/{id:int}/assign")]
+        [HttpPut("api/lessons/{lessonId:int}/exercises/{id:int}/assign-asset")]
         [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse<LessonSlotResponse>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> AssignItemToSlot(int lessonId, int id, [FromBody] AssignItemAssetRequest request)
+        public async Task<IActionResult> AssignAssetToExercise(int lessonId, int id, [FromBody] AssignItemAssetRequest request)
         {
             try
             {
@@ -224,14 +224,14 @@ namespace GodotXR.Api.Controllers
                     return NotFound(new ApiResponse<LessonSlotResponse>
                     {
                         Success = false,
-                        Message = "Slot not found in this lesson."
+                        Message = "Exercise not found in this lesson."
                     });
                 }
 
                 return Ok(new ApiResponse<LessonSlotResponse>
                 {
                     Success = true,
-                    Message = "Item assigned to slot successfully.",
+                    Message = "Asset assigned to exercise successfully.",
                     Data = result
                 });
             }
@@ -245,6 +245,7 @@ namespace GodotXR.Api.Controllers
             }
         }
 
+        [HttpGet("api/lessons/{lessonId:int}/vr-config")]
         [HttpGet("api/lessons/{lessonId:int}/client-config")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<ClientConfigSlotResponse>>), StatusCodes.Status200OK)]
