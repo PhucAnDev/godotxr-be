@@ -246,7 +246,7 @@ namespace GodotXR.Api.Controllers
         }
 
         [HttpGet("api/lessons/{lessonId:int}/client-config")]
-        [AllowAnonymous]
+        [Authorize(Roles = "Admin,Teacher,Parent")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<ClientConfigSlotResponse>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetClientConfig(int lessonId)
         {
