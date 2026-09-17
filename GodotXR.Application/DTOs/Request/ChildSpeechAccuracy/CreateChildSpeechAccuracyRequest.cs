@@ -31,6 +31,9 @@ namespace GodotXR.Application.DTOs.Request.ChildSpeechAccuracy
         [MaxLength(50)]
         public string? ErrorType { get; set; }
 
+        [MaxLength(100)]
+        public string? SpeechErrorCategory { get; set; }
+
         public int? AudioChunkIndex { get; set; }
     }
 }

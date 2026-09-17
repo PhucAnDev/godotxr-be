@@ -14,6 +14,7 @@ namespace GodotXR.Application.DTOs.Response.ChildSpeechAccuracy
         public float? PronunciationScore { get; set; }
         public float? CompletenessScore { get; set; }
         public string? ErrorType { get; set; }
+        public string SpeechErrorCategory { get; set; } = string.Empty;
         public int? AudioChunkIndex { get; set; }
         public DateTime CreatedAt { get; set; }
     }

@@ -3,6 +3,7 @@ using GodotXR.Application.DTOs.Request.ChildSpeechAccuracy;
 using GodotXR.Application.DTOs.Response.ChildSpeechAccuracy;
 using GodotXR.Domain.Entities;
 using GodotXR.Domain.IUnitOfWork;
+using GodotXR.Domain.Shared;
 
 namespace GodotXR.Application.Services
 {
@@ -58,6 +59,8 @@ namespace GodotXR.Application.Services
             }
 
             var entity = _mapper.Map<ChildSpeechAccuracy>(request);
+            entity.SpeechErrorCategory = SpeechErrorCategoryConstants.GetValidOrDefault(request.SpeechErrorCategory);
+
             await _unitOfWork.ChildSpeechAccuracyRepository.AddAsync(entity);
             await _unitOfWork.SaveChangesAsync();
             return _mapper.Map<ChildSpeechAccuracyResponse>(entity);
@@ -69,6 +72,8 @@ namespace GodotXR.Application.Services
             foreach (var req in requests)
             {
                 var entity = _mapper.Map<ChildSpeechAccuracy>(req);
+                entity.SpeechErrorCategory = SpeechErrorCategoryConstants.GetValidOrDefault(req.SpeechErrorCategory);
+
                 await _unitOfWork.ChildSpeechAccuracyRepository.AddAsync(entity);
                 count++;
             }
