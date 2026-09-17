@@ -1,4 +1,5 @@
 using GodotXR.Domain.Entities;
+using GodotXR.Domain.Shared;
 using Microsoft.EntityFrameworkCore;
 
 namespace GodotXR.Infrastructure.Configurations
@@ -212,6 +213,12 @@ namespace GodotXR.Infrastructure.Configurations
                 .WithMany()
                 .HasForeignKey(csa => csa.ResultId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ChildSpeechAccuracy>()
+                .Property(csa => csa.SpeechErrorCategory)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasDefaultValue(SpeechErrorCategoryConstants.Default);
 
             modelBuilder.Entity<ChildSpeechAccuracy>().HasQueryFilter(csa => !csa.IsDeleted);
         }

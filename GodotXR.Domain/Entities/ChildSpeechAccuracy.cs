@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GodotXR.Domain.Shared;
 
 namespace GodotXR.Domain.Entities
 {
@@ -30,6 +31,10 @@ namespace GodotXR.Domain.Entities
 
         [MaxLength(50)]
         public string? ErrorType { get; set; }
+
+        [Required]
+        [MaxLength(100)]
+        public string SpeechErrorCategory { get; set; } = SpeechErrorCategoryConstants.Default;
 
         public int? AudioChunkIndex { get; set; }
 

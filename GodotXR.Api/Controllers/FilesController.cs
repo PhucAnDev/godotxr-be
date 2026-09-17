@@ -4,6 +4,7 @@ using GodotXR.Application.Helpers;
 using GodotXR.Application.Services;
 using GodotXR.Domain.Entities;
 using GodotXR.Domain.IUnitOfWork;
+using GodotXR.Domain.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
@@ -529,6 +530,7 @@ namespace GodotXR.Api.Controllers
                             PronunciationScore = calibratedPron,
                             CompletenessScore = calibratedCompleteness,
                             ErrorType = phraseErrorType,
+                            SpeechErrorCategory = SpeechErrorCategoryConstants.GetValidOrDefault(request.SpeechErrorCategory),
                             CreatedAt = DateTime.UtcNow
                         };
 
@@ -696,6 +698,8 @@ namespace GodotXR.Api.Controllers
         public string ReferenceText { get; set; } = null!;
 
         public string? SpokenText { get; set; }
+
+        public string? SpeechErrorCategory { get; set; }
     }
 
     public class AssessChunkResponse
