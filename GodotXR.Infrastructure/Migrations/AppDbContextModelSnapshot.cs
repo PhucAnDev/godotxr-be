@@ -216,6 +216,13 @@ namespace GodotXR.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("SpeechErrorCategory")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasDefaultValue("Thay thế âm");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -853,7 +860,7 @@ namespace GodotXR.Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 8, 29, 21, 57, 31, 824, DateTimeKind.Utc).AddTicks(5122),
+                            CreatedAt = new DateTime(2026, 9, 17, 23, 2, 38, 584, DateTimeKind.Utc).AddTicks(690),
                             Description = "System Administrator",
                             IsActive = true,
                             IsDeleted = false,
@@ -862,7 +869,7 @@ namespace GodotXR.Infrastructure.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 8, 29, 21, 57, 31, 824, DateTimeKind.Utc).AddTicks(5145),
+                            CreatedAt = new DateTime(2026, 9, 17, 23, 2, 38, 584, DateTimeKind.Utc).AddTicks(710),
                             Description = "Teacher",
                             IsActive = true,
                             IsDeleted = false,
@@ -871,7 +878,7 @@ namespace GodotXR.Infrastructure.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 8, 29, 21, 57, 31, 824, DateTimeKind.Utc).AddTicks(5147),
+                            CreatedAt = new DateTime(2026, 9, 17, 23, 2, 38, 584, DateTimeKind.Utc).AddTicks(714),
                             Description = "Parent",
                             IsActive = true,
                             IsDeleted = false,
