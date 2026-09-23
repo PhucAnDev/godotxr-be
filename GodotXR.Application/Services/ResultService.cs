@@ -21,7 +21,7 @@ namespace GodotXR.Application.Services
         {
             var errors = new List<string>();
 
-            if (!request.LessonId.HasValue)
+            if (!request.IsExercise && !request.LessonId.HasValue)
             {
                 errors.Add("Phải cung cấp mã bài học (LessonId).");
                 return (false, false, errors, null);
@@ -44,14 +44,17 @@ namespace GodotXR.Application.Services
             if (!enrollments.Any(e => e.Status == "Active" && !e.IsDeleted))
                 errors.Add("Trẻ chưa có hồ sơ ghi danh hoạt động tại bất kỳ lớp nào.");
 
-            // BR-84: Lesson phải tồn tại
-            var lesson = await _unitOfWork.LessonRepository.GetByIdAsync(request.LessonId.Value);
+            // BR-84: Lesson phải tồn tại nếu có LessonId
+            if (request.LessonId.HasValue)
+            {
+                var lesson = await _unitOfWork.LessonRepository.GetByIdAsync(request.LessonId.Value);
 
-            if (lesson == null)
-                return (false, true, new[] { "Không tìm thấy bài học." }, null);
+                if (lesson == null)
+                    return (false, true, new[] { "Không tìm thấy bài học." }, null);
 
-            if (lesson.Status != "Active")
-                errors.Add("Bài học không ở trạng thái Hoạt động.");
+                if (lesson.Status != "Active")
+                    errors.Add("Bài học không ở trạng thái Hoạt động.");
+            }
 
             // BR-86: Score range
             if (request.Score < 0 || request.Score > 100)
@@ -66,13 +69,6 @@ namespace GodotXR.Application.Services
             if (!validStatuses.Contains(request.CompletionStatus))
                 errors.Add("Trạng thái hoàn thành không hợp lệ. Chỉ chấp nhận: 'Completed' hoặc 'Incomplete'.");
 
-            // BR-97: AccuracyScore range
-            //foreach (var pd in request.PronunciationDetails)
-            //{
-            //    if (pd.AccuracyScore < 0 || pd.AccuracyScore > 100)
-            //        errors.Add("AccuracyScore must be between 0 and 100.");
-            //}
-
             if (errors.Any())
                 return (false, false, errors, null);
 
@@ -86,6 +82,8 @@ namespace GodotXR.Application.Services
                 ChildId = request.ChildId,
 
                 LessonId = request.LessonId,
+
+                IsExercise = request.IsExercise,
 
                 AttemptNumber = attemptCount + 1,
 

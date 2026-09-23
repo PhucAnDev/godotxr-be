@@ -221,7 +221,7 @@ namespace GodotXR.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)")
-                        .HasDefaultValue("Thay thế âm");
+                        .HasDefaultValue("Không");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -788,6 +788,11 @@ namespace GodotXR.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsExercise")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<bool>("IsFinalized")
                         .HasColumnType("bit");
 
@@ -860,7 +865,7 @@ namespace GodotXR.Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 9, 17, 23, 2, 38, 584, DateTimeKind.Utc).AddTicks(690),
+                            CreatedAt = new DateTime(2026, 9, 23, 22, 35, 46, 373, DateTimeKind.Utc).AddTicks(3672),
                             Description = "System Administrator",
                             IsActive = true,
                             IsDeleted = false,
@@ -869,7 +874,7 @@ namespace GodotXR.Infrastructure.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 9, 17, 23, 2, 38, 584, DateTimeKind.Utc).AddTicks(710),
+                            CreatedAt = new DateTime(2026, 9, 23, 22, 35, 46, 373, DateTimeKind.Utc).AddTicks(3686),
                             Description = "Teacher",
                             IsActive = true,
                             IsDeleted = false,
@@ -878,7 +883,7 @@ namespace GodotXR.Infrastructure.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 9, 17, 23, 2, 38, 584, DateTimeKind.Utc).AddTicks(714),
+                            CreatedAt = new DateTime(2026, 9, 23, 22, 35, 46, 373, DateTimeKind.Utc).AddTicks(3688),
                             Description = "Parent",
                             IsActive = true,
                             IsDeleted = false,

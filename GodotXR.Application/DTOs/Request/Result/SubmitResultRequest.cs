@@ -7,6 +7,8 @@ namespace GodotXR.Application.DTOs.Request.Result
         public int ChildId { get; set; }
 
         public int? LessonId { get; set; }
+        
+        public bool IsExercise { get; set; } = false;
 
         public string CompletionStatus { get; set; } = null!; 
 
