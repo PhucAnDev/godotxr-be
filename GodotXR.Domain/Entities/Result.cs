@@ -8,6 +8,8 @@ namespace GodotXR.Domain.Entities
 
         public int? LessonId { get; set; }
 
+        public bool IsExercise { get; set; } = false;
+
         public int AttemptNumber { get; set; }
 
         public string CompletionStatus { get; set; } = string.Empty;

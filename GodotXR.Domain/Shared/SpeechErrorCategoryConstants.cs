@@ -2,15 +2,17 @@ namespace GodotXR.Domain.Shared
 {
     public static class SpeechErrorCategoryConstants
     {
+        public const string None = "Không";
         public const string Substitution = "Thay thế âm";
         public const string Omission = "Nuốt âm/Bỏ sót âm";
         public const string Distortion = "Méo tiếng/Chưa tròn vành rõ chữ";
         public const string ToneShift = "Lệch thanh điệu (Hỏi/Ngã)";
 
-        public const string Default = Substitution;
+        public const string Default = None;
 
         public static readonly string[] AllowedValues = new[]
         {
+            None,
             Substitution,
             Omission,
             Distortion,
