@@ -1,4 +1,4 @@
-﻿using GodotXR.Domain.Entities;
+using GodotXR.Domain.Entities;
 using GodotXR.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,17 +23,6 @@ namespace GodotXR.Infrastructure.Data
                     Email = "admin@godotxr.com",
                     Phone = "0123456789",
                     RoleId = 1,
-                    IsActive = true,
-                    CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-                },
-                new User
-                {
-                    Id = 2,
-                    PasswordHash = "$2a$12$fm/KNqTHvTPZ.Xp17lMgpO7C5oJzF9lUi9niXMOX5mriX6xG9VPdu",
-                    FullName = "Doan Manh Hiep",
-                    Email = "teacher@godotxr.com",
-                    Phone = "0987654321",
-                    RoleId = 2,
                     IsActive = true,
                     CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 }
