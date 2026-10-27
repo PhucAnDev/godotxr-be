@@ -1,4 +1,3 @@
-using GodotXR.Application.DTOs.External;
 using GodotXR.Application.DTOs.Response.FileUpload;
 using GodotXR.Application.Helpers;
 using GodotXR.Application.Services;
@@ -700,24 +699,5 @@ namespace GodotXR.Api.Controllers
         public string? SpokenText { get; set; }
 
         public string? SpeechErrorCategory { get; set; }
-    }
-
-    public class AssessChunkResponse
-    {
-        public int ChunkIndex { get; set; }
-        public string RecognizedText { get; set; } = string.Empty;
-        public double AccuracyScore { get; set; }
-        public double FluencyScore { get; set; }
-        public double CompletenessScore { get; set; }
-        public double PronScore { get; set; }
-        public List<PhonemeIssue> Issues { get; set; } = new();
-    }
-
-    public class PhonemeIssue
-    {
-        public string Word { get; set; } = string.Empty;
-        public string Phoneme { get; set; } = string.Empty;
-        public double AccuracyScore { get; set; }
-        public string ErrorType { get; set; } = "None";
     }
 }
