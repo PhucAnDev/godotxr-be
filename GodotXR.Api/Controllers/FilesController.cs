@@ -700,6 +700,8 @@ namespace GodotXR.Api.Controllers
         public string? SpokenText { get; set; }
 
         public string? SpeechErrorCategory { get; set; }
+
+        public string? SpeechErrorCategory { get; set; }
     }
 
     public class AssessChunkResponse

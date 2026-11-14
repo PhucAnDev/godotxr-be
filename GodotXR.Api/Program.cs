@@ -4,6 +4,9 @@ using GodotXR.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
+// Cho phép xử lý linh hoạt DateTime trong PostgreSQL/Npgsql
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -578,8 +578,7 @@ namespace GodotXR.Infrastructure.Migrations
                 columns: new[] { "Id", "Avatar", "CreatedAt", "DeletedAt", "Email", "FullName", "Gender", "IsActive", "IsDeleted", "IsEmailVerified", "MustChangePassword", "PasswordHash", "Phone", "RoleId", "Specialty", "UpdatedAt", "VerifyToken", "VerifyTokenExpiry" },
                 values: new object[,]
                 {
-                    { 1, null, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "admin@godotxr.com", "System Admin", "", true, false, false, true, "$2a$12$fm/KNqTHvTPZ.Xp17lMgpO7C5oJzF9lUi9niXMOX5mriX6xG9VPdu", "0123456789", 1, "", null, null, null },
-                    { 2, null, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "teacher@godotxr.com", "Doan Manh Hiep", "", true, false, false, true, "$2a$12$fm/KNqTHvTPZ.Xp17lMgpO7C5oJzF9lUi9niXMOX5mriX6xG9VPdu", "0987654321", 2, "", null, null, null }
+                    { 1, null, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "admin@godotxr.com", "System Admin", "", true, false, false, true, "$2a$12$fm/KNqTHvTPZ.Xp17lMgpO7C5oJzF9lUi9niXMOX5mriX6xG9VPdu", "0123456789", 1, "", null, null, null }
                 });
 
             migrationBuilder.CreateIndex(

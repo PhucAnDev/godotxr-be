@@ -11,12 +11,12 @@ namespace GodotXR.Infrastructure.Data
             var connectionString = configuration.GetConnectionString("DefaultConnection");
 
             services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(connectionString, sqlServerOptionsAction: sqlOptions =>
+                options.UseNpgsql(connectionString, npgsqlOptions =>
                 {
-                    sqlOptions.EnableRetryOnFailure(
+                    npgsqlOptions.EnableRetryOnFailure(
                         maxRetryCount: 5,
                         maxRetryDelay: TimeSpan.FromSeconds(10),
-                        errorNumbersToAdd: null);
+                        errorCodesToAdd: null);
                 }));
         }
     }
