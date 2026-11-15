@@ -269,7 +269,7 @@ __pycache__
 .pyc
 
 #ignore .json
-*.json
+appsettings.Development.json
 # Cake - Uncomment if you are using it
 # tools
 
