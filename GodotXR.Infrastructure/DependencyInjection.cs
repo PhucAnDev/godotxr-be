@@ -22,12 +22,8 @@ namespace GodotXR.Infrastructure
         {
             DbFactory.RegisterContext(services, configuration);
 
-            // Cache
-            services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = configuration.GetConnectionString("Redis");
-                options.InstanceName = "GodotXR_";
-            });
+            // In-Memory Distributed Cache (thay thế Redis hoàn toàn)
+            services.AddDistributedMemoryCache();
 
             // Object Storage
             services.Configure<StorageOptions>(

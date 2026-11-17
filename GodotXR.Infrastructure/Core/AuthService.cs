@@ -237,7 +237,7 @@ namespace GodotXR.Infrastructure.Core
             }
             catch (Exception ex)
             {
-                return (false, false, new[] { $"Redis error: {ex.Message}" });
+                return (false, false, new[] { $"Cache error: {ex.Message}" });
             }
 
             var subject = "Mã OTP Đặt Lại Mật Khẩu - GodotXR";
