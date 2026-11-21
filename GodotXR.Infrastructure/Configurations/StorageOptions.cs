@@ -1,4 +1,4 @@
-﻿namespace GodotXR.Infrastructure.Configurations
+namespace GodotXR.Infrastructure.Configurations
 {
     public sealed class StorageOptions
     {
@@ -13,5 +13,7 @@
         public string BucketName { get; set; } = string.Empty;
 
         public bool UseSSL { get; set; }
+
+        public string Region { get; set; } = "ap-south-1";
     }
 }
