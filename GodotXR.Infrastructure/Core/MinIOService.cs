@@ -25,18 +25,18 @@ namespace GodotXR.Infrastructure.Core
             string contentType,
             CancellationToken ct)
         {
-            var exists = await _client.BucketExistsAsync(
-                new BucketExistsArgs()
-                    .WithBucket(_options.BucketName),
-                ct);
+            //var exists = await _client.BucketExistsAsync(
+            //    new BucketExistsArgs()
+            //        .WithBucket(_options.BucketName),
+            //    ct);
 
-            if (!exists)
-            {
-                await _client.MakeBucketAsync(
-                    new MakeBucketArgs()
-                        .WithBucket(_options.BucketName),
-                    ct);
-            }
+            //if (!exists)
+            //{
+            //    await _client.MakeBucketAsync(
+            //        new MakeBucketArgs()
+            //            .WithBucket(_options.BucketName),
+            //        ct);
+            //}
 
             await _client.PutObjectAsync(
                 new PutObjectArgs()

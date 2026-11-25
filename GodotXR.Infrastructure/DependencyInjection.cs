@@ -45,6 +45,7 @@ namespace GodotXR.Infrastructure
                     .WithCredentials(
                         options.AccessKey,
                         options.SecretKey)
+                    .WithSSL(options.UseSSL)
                     .Build();
             });
 
