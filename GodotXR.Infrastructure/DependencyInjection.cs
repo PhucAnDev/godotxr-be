@@ -55,8 +55,6 @@ namespace GodotXR.Infrastructure
                     {
                         client = client.WithSSL();
                     }
-
-                    .WithSSL(options.UseSSL)
                     return client.Build();
                 });
             }
