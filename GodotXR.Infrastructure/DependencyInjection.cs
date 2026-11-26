@@ -22,12 +22,8 @@ namespace GodotXR.Infrastructure
         {
             DbFactory.RegisterContext(services, configuration);
 
-            // Cache
-            services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = configuration.GetConnectionString("Redis");
-                options.InstanceName = "GodotXR_";
-            });
+            // In-Memory Distributed Cache (thay thế Redis hoàn toàn)
+            services.AddDistributedMemoryCache();
 
             // Object Storage
             services.Configure<StorageOptions>(
@@ -36,18 +32,34 @@ namespace GodotXR.Infrastructure
             var options =
                 configuration
                     .GetSection(StorageOptions.SectionName)
-                    .Get<StorageOptions>()!;
+                    .Get<StorageOptions>();
 
-            services.AddSingleton<IMinioClient>(_ =>
+            if (options != null &&
+                !string.IsNullOrWhiteSpace(options.Endpoint) &&
+                !options.Endpoint.Contains("supabase.co", StringComparison.OrdinalIgnoreCase))
             {
-                return new MinioClient()
-                    .WithEndpoint(options.Endpoint)
-                    .WithCredentials(
-                        options.AccessKey,
-                        options.SecretKey)
+                services.AddSingleton<IMinioClient>(_ =>
+                {
+                    var cleanEndpoint = options.Endpoint
+                        .Replace("https://", string.Empty)
+                        .Replace("http://", string.Empty)
+                        .TrimEnd('/');
+
+                    var client = new MinioClient()
+                        .WithEndpoint(cleanEndpoint)
+                        .WithCredentials(
+                            options.AccessKey,
+                            options.SecretKey);
+
+                    if (options.UseSSL)
+                    {
+                        client = client.WithSSL();
+                    }
+
                     .WithSSL(options.UseSSL)
-                    .Build();
-            });
+                    return client.Build();
+                });
+            }
 
             services.AddScoped<IStorageService, MinIOService>();
 
