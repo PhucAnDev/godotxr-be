@@ -37,14 +37,11 @@ using (var scope = app.Services.CreateScope())
     await dbContext.Database.MigrateAsync();
 }
 
-//if (app.Environment.IsDevelopment() || swaggerEnabled)
-//{
-//    app.UseSwagger();
-//    app.UseSwaggerUI();
-//}
-
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment() || swaggerEnabled)
+{
+   app.UseSwagger();
+   app.UseSwaggerUI();
+}
 
 app.UseHttpsRedirection();
 
